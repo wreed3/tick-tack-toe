@@ -1,24 +1,53 @@
-import logo from './logo.svg';
+import { useReducer } from 'react';
+import { gameReducer, initialState } from './game';
 import './App.css';
 
-function App() {
+function Square({ mark, updateMark }){
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
+    <button className="square" onClick={updateMark}>{mark}</button>
+  );
+}
+
+function Board({ board, updateGame }) {
+  return (
+    <div className="game-board">
+      {
+        board.map((rowOfMarks, row) => (
+          <div className="board-row">
+            {
+              rowOfMarks.map((mark, col) => (
+                <Square mark={mark} updateMark={() => updateGame({ row, col })} />
+              ))
+            }
+          </div>
+        ))
+      }
     </div>
+  );
+}
+
+function NewGame({ newGame }) {
+  return (
+    <button className='new-game' onClick={newGame}>New Game</button>
+    
+  );
+}
+
+
+
+function App() {
+  const [game, updateGame] = useReducer(gameReducer, initialState);
+
+  return (
+    <div className="game">
+      <Board board={game.board} updateGame={updateGame} />
+      <div className="game-info">
+        <div>{game.winner}</div>
+        <div>{game.error}</div>
+        {game.winner ? <NewGame newGame={() => updateGame({ reset: true })} /> : null}
+        <ol>{/* TODO */}</ol>
+      </div>
+      </div>
   );
 }
 
