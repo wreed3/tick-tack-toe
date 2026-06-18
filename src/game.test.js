@@ -1,46 +1,82 @@
-import { initialState, reducer } from "./game";
+import { calculateWinner, isDraw, getBestMove } from './game';
 
-test('marks an X on the first move', () => {
-  const row = Math.floor(Math.random() * 3); // 0, 1, 2
-  const col = Math.floor(Math.random() * 3); // 0, 1, 2
+describe('calculateWinner', () => {
+  test('returns null for empty board', () => {
+    const squares = Array(9).fill(null);
+    expect(calculateWinner(squares)).toBeNull();
+  });
 
-  const nextState = reducer(initialState, { row, col });
+  test('detects horizontal win', () => {
+    const squares = ['X', 'X', 'X', null, 'O', null, null, 'O', null];
+    const result = calculateWinner(squares);
+    expect(result.winner).toBe('X');
+    expect(result.line).toEqual([0, 1, 2]);
+  });
 
-  expect(nextState.player).toEqual('O');
-  expect(nextState.board[row][col]).toEqual('X');
+  test('detects vertical win', () => {
+    const squares = ['X', 'O', null, 'X', 'O', null, 'X', null, null];
+    const result = calculateWinner(squares);
+    expect(result.winner).toBe('X');
+    expect(result.line).toEqual([0, 3, 6]);
+  });
+
+  test('detects diagonal win', () => {
+    const squares = ['X', 'O', null, null, 'X', 'O', null, null, 'X'];
+    const result = calculateWinner(squares);
+    expect(result.winner).toBe('X');
+    expect(result.line).toEqual([0, 4, 8]);
+  });
+
+  test('returns null when no winner', () => {
+    const squares = ['X', 'O', 'X', 'X', 'O', 'X', 'O', 'X', 'O'];
+    expect(calculateWinner(squares)).toBeNull();
+  });
 });
 
-test('marks an O on the second move', () => {
-  const firstState = reducer(initialState, { row: 0, col: 0 });
-  const secondState = reducer(firstState, { row: 1, col: 0 });
+describe('isDraw', () => {
+  test('returns false for empty board', () => {
+    const squares = Array(9).fill(null);
+    expect(isDraw(squares)).toBe(false);
+  });
 
-  expect(secondState.player).toEqual('X');
-  expect(secondState.board[0][0]).toEqual('X');
-  expect(secondState.board[1][0]).toEqual('O');
+  test('returns false when game in progress', () => {
+    const squares = ['X', 'O', 'X', null, null, null, null, null, null];
+    expect(isDraw(squares)).toBe(false);
+  });
+
+  test('returns true for draw game', () => {
+    const squares = ['X', 'O', 'X', 'X', 'O', 'X', 'O', 'X', 'O'];
+    expect(isDraw(squares)).toBe(true);
+  });
+
+  test('returns false when there is a winner', () => {
+    const squares = ['X', 'X', 'X', 'O', 'O', null, null, null, null];
+    expect(isDraw(squares)).toBe(false);
+  });
 });
 
-test('cannot mark an already taken square', () => {
-  const firstState = reducer(initialState, { row: 0, col: 0 });
-  const secondState = reducer(firstState, { row: 0, col: 0 });
+describe('getBestMove', () => {
+  test('takes winning move when available', () => {
+    const squares = ['X', 'X', null, 'O', 'O', null, null, null, null];
+    const move = getBestMove(squares, 'X');
+    expect(move).toBe(2);
+  });
 
-  expect(secondState.player).toEqual('O');
-  expect(secondState.board[0][0]).toEqual('X');
-  expect(secondState.error).toEqual('Illegal move');
-});
+  test('blocks opponent winning move', () => {
+    const squares = ['O', 'O', null, 'X', null, null, null, null, null];
+    const move = getBestMove(squares, 'X');
+    expect(move).toBe(2);
+  });
 
-test('sets a winner', () => {
-  const beforeWinningState = {
-    player: 'X',
-    board: [
-      ['X', 'O', ''],
-      ['O', 'X', ''],
-      ['', '', ''],
-    ],
-    winner: null,
-  };
+  test('takes center when available', () => {
+    const squares = ['X', null, null, null, null, null, null, null, 'O'];
+    const move = getBestMove(squares, 'X');
+    expect(move).toBe(4);
+  });
 
-  const winningState = reducer(beforeWinningState, { row: 2, col: 2 });
-
-  expect(winningState.board[2][2]).toEqual('X');
-  expect(winningState.winner).toEqual('X');
+  test('returns valid move', () => {
+    const squares = ['X', 'O', 'X', 'O', 'X', 'O', null, null, null];
+    const move = getBestMove(squares, 'X');
+    expect([6, 7, 8]).toContain(move);
+  });
 });

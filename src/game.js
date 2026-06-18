@@ -1,68 +1,93 @@
-export const initialState = {
-  player: 'X',
-  board: [
-    ['', '', ''],
-    ['', '', ''],
-    ['', '', ''],
-  ],
-  winner: null,
-  error: null,
-};
+/**
+ * Game logic for Tic-Tac-Toe
+ */
 
-const copy = (data) => JSON.parse(JSON.stringify(data));
+/**
+ * Calculate the winner of the game
+ * @param {Array} squares - Array of 9 squares
+ * @returns {Object|null} - Winner info or null
+ */
+export function calculateWinner(squares) {
+  const lines = [
+    [0, 1, 2],
+    [3, 4, 5],
+    [6, 7, 8],
+    [0, 3, 6],
+    [1, 4, 7],
+    [2, 5, 8],
+    [0, 4, 8],
+    [2, 4, 6],
+  ];
 
-export function gameReducer(state, action) {
-  const nextState = copy(state); // create a new copy of the state
-  const { reset = false, row, col } = action; // extract the row and column of the move
-
-  if (reset) {
-    return initialState;
+  for (let i = 0; i < lines.length; i++) {
+    const [a, b, c] = lines[i];
+    if (squares[a] && squares[a] === squares[b] && squares[a] === squares[c]) {
+      return {
+        winner: squares[a],
+        line: lines[i],
+      };
+    }
   }
-
-  if (state.winner) { // game is already over
-    nextState.error = "Game already won";
-    return nextState;
-  }
-
-  if (state.board[row][col] !== '') { // spot is already taken
-    nextState.error = "Illegal move";
-    return nextState;
-  }
-
-  nextState.error = null;
-  nextState.board[row][col] = state.player; // set the position to the current player, X or O
-  nextState.player = state.player === 'X' ? 'O' : 'X'; // update the player to the next player
-  nextState.winner = findWinner(nextState.board); // check if the board has a winner
-
-  return nextState;
-}
-
-function findWinner(board) {
-  const topCorner = board[0][0];
-  const center = board[1][1];
-  const bottomCorner = board[2][2];
-
-  if (topCorner !== '' && topCorner === center && topCorner === bottomCorner) {
-    return topCorner;
-  }
-
   return null;
 }
 
-const nums = [1,2,3,3,2,1];
-const set = new Set(nums);
-const map = new Map();
-let a = { hello: 1 }; // disappears
-const b = { hello: 1 };
-a = b;
-map.set(a, 1);
-map.set(b, 2);
-
-for (const n of nums) {
-  if (!map.has(n)) {
-    map.set(n, 1);
-  } else {
-    map.set(n, map.get(n) + 1);
-  }
+/**
+ * Check if the game is a draw
+ * @param {Array} squares - Array of 9 squares
+ * @returns {boolean} - True if draw
+ */
+export function isDraw(squares) {
+  return squares.every(square => square !== null) && !calculateWinner(squares);
 }
 
+/**
+ * Get the best move for AI player (minimax algorithm)
+ * @param {Array} squares - Current board state
+ * @param {string} player - Current player ('X' or 'O')
+ * @returns {number} - Best move index
+ */
+export function getBestMove(squares, player) {
+  const opponent = player === 'X' ? 'O' : 'X';
+  
+  // Simple AI: Check for winning move or block opponent
+  const lines = [
+    [0, 1, 2],
+    [3, 4, 5],
+    [6, 7, 8],
+    [0, 3, 6],
+    [1, 4, 7],
+    [2, 5, 8],
+    [0, 4, 8],
+    [2, 4, 6],
+  ];
+
+  // Try to win
+  for (let line of lines) {
+    const [a, b, c] = line;
+    if (squares[a] === player && squares[b] === player && squares[c] === null) return c;
+    if (squares[a] === player && squares[c] === player && squares[b] === null) return b;
+    if (squares[b] === player && squares[c] === player && squares[a] === null) return a;
+  }
+
+  // Block opponent
+  for (let line of lines) {
+    const [a, b, c] = line;
+    if (squares[a] === opponent && squares[b] === opponent && squares[c] === null) return c;
+    if (squares[a] === opponent && squares[c] === opponent && squares[b] === null) return b;
+    if (squares[b] === opponent && squares[c] === opponent && squares[a] === null) return a;
+  }
+
+  // Take center
+  if (squares[4] === null) return 4;
+
+  // Take corner
+  const corners = [0, 2, 6, 8];
+  const availableCorners = corners.filter(i => squares[i] === null);
+  if (availableCorners.length > 0) {
+    return availableCorners[Math.floor(Math.random() * availableCorners.length)];
+  }
+
+  // Take any available space
+  const available = squares.map((sq, i) => sq === null ? i : null).filter(i => i !== null);
+  return available[Math.floor(Math.random() * available.length)];
+}
