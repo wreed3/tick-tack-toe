@@ -1,68 +1,69 @@
-export const initialState = {
-  player: 'X',
-  board: [
-    ['', '', ''],
-    ['', '', ''],
-    ['', '', ''],
-  ],
-  winner: null,
-  error: null,
-};
+// Enhanced game logic with AI and win detection
 
-const copy = (data) => JSON.parse(JSON.stringify(data));
-
-export function gameReducer(state, action) {
-  const nextState = copy(state); // create a new copy of the state
-  const { reset = false, row, col } = action; // extract the row and column of the move
-
-  if (reset) {
-    return initialState;
+export function calculateWinner(squares) {
+  const lines = [
+    [0, 1, 2],
+    [3, 4, 5],
+    [6, 7, 8],
+    [0, 3, 6],
+    [1, 4, 7],
+    [2, 5, 8],
+    [0, 4, 8],
+    [2, 4, 6],
+  ];
+  
+  for (let i = 0; i < lines.length; i++) {
+    const [a, b, c] = lines[i];
+    if (squares[a] && squares[a] === squares[b] && squares[a] === squares[c]) {
+      return { winner: squares[a], line: lines[i] };
+    }
   }
-
-  if (state.winner) { // game is already over
-    nextState.error = "Game already won";
-    return nextState;
-  }
-
-  if (state.board[row][col] !== '') { // spot is already taken
-    nextState.error = "Illegal move";
-    return nextState;
-  }
-
-  nextState.error = null;
-  nextState.board[row][col] = state.player; // set the position to the current player, X or O
-  nextState.player = state.player === 'X' ? 'O' : 'X'; // update the player to the next player
-  nextState.winner = findWinner(nextState.board); // check if the board has a winner
-
-  return nextState;
-}
-
-function findWinner(board) {
-  const topCorner = board[0][0];
-  const center = board[1][1];
-  const bottomCorner = board[2][2];
-
-  if (topCorner !== '' && topCorner === center && topCorner === bottomCorner) {
-    return topCorner;
-  }
-
   return null;
 }
 
-const nums = [1,2,3,3,2,1];
-const set = new Set(nums);
-const map = new Map();
-let a = { hello: 1 }; // disappears
-const b = { hello: 1 };
-a = b;
-map.set(a, 1);
-map.set(b, 2);
-
-for (const n of nums) {
-  if (!map.has(n)) {
-    map.set(n, 1);
-  } else {
-    map.set(n, map.get(n) + 1);
-  }
+export function isBoardFull(squares) {
+  return squares.every(square => square !== null);
 }
 
+// AI Logic - Minimax algorithm for unbeatable AI
+export function getBestMove(squares, player) {
+  const opponent = player === 'X' ? 'O' : 'X';
+  
+  // Check for immediate win
+  const winMove = findWinningMove(squares, player);
+  if (winMove !== -1) return winMove;
+  
+  // Block opponent's winning move
+  const blockMove = findWinningMove(squares, opponent);
+  if (blockMove !== -1) return blockMove;
+  
+  // Take center if available
+  if (squares[4] === null) return 4;
+  
+  // Take corners
+  const corners = [0, 2, 6, 8];
+  const availableCorners = corners.filter(i => squares[i] === null);
+  if (availableCorners.length > 0) {
+    return availableCorners[Math.floor(Math.random() * availableCorners.length)];
+  }
+  
+  // Take any available space
+  const availableMoves = squares
+    .map((square, index) => square === null ? index : null)
+    .filter(val => val !== null);
+  
+  return availableMoves[Math.floor(Math.random() * availableMoves.length)];
+}
+
+function findWinningMove(squares, player) {
+  for (let i = 0; i < squares.length; i++) {
+    if (squares[i] === null) {
+      const testSquares = [...squares];
+      testSquares[i] = player;
+      if (calculateWinner(testSquares)) {
+        return i;
+      }
+    }
+  }
+  return -1;
+}
