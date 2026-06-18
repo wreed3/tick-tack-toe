@@ -68,7 +68,7 @@ function App() {
         return () => clearTimeout(timer);
       }
     }
-  }, [currentMove, isXNext, gameMode, playerSymbol, currentSquares, winnerInfo, draw]);
+  }, [gameMode, isXNext, winnerInfo, draw, playerSymbol, currentSquares]);
 
   function handleClick(i) {
     if (currentSquares[i] || winnerInfo || draw) {
@@ -78,12 +78,12 @@ function App() {
     const nextSquares = currentSquares.slice();
     nextSquares[i] = isXNext ? 'X' : 'O';
     
-    const nextHistory = [...history.slice(0, currentMove + 1), nextSquares];
-    setHistory(nextHistory);
-    setCurrentMove(nextHistory.length - 1);
+    const nextHistory = history.slice(0, currentMove + 1);
+    setHistory([...nextHistory, nextSquares]);
+    setCurrentMove(nextHistory.length);
     setIsXNext(!isXNext);
 
-    // Update scores if game ended
+    // Update scores if game is over
     const newWinner = calculateWinner(nextSquares);
     if (newWinner) {
       setScores(prev => ({
@@ -91,8 +91,16 @@ function App() {
         [newWinner.winner]: prev[newWinner.winner] + 1
       }));
     } else if (isDraw(nextSquares)) {
-      setScores(prev => ({ ...prev, draws: prev.draws + 1 }));
+      setScores(prev => ({
+        ...prev,
+        draws: prev.draws + 1
+      }));
     }
+  }
+
+  function jumpTo(move) {
+    setCurrentMove(move);
+    setIsXNext(move % 2 === 0);
   }
 
   function resetGame() {
@@ -103,21 +111,15 @@ function App() {
 
   function resetScores() {
     setScores({ X: 0, O: 0, draws: 0 });
+  }
+
+  function changeGameMode(mode) {
+    setGameMode(mode);
     resetGame();
   }
 
-  function jumpTo(move) {
-    setCurrentMove(move);
-    setIsXNext(move % 2 === 0);
-  }
-
-  function toggleGameMode() {
-    setGameMode(prev => prev === 'pvp' ? 'ai' : 'pvp');
-    resetGame();
-  }
-
-  function togglePlayerSymbol() {
-    setPlayerSymbol(prev => prev === 'X' ? 'O' : 'X');
+  function changePlayerSymbol(symbol) {
+    setPlayerSymbol(symbol);
     resetGame();
   }
 
@@ -127,20 +129,21 @@ function App() {
   } else if (draw) {
     status = "It's a draw!";
   } else {
-    status = `Next player: ${isXNext ? 'X' : 'O'}`;
-    if (gameMode === 'ai') {
-      const currentPlayer = isXNext ? 'X' : 'O';
-      status += currentPlayer === playerSymbol ? ' (You)' : ' (AI)';
+    const currentPlayer = isXNext ? 'X' : 'O';
+    if (gameMode === 'ai' && currentPlayer !== playerSymbol) {
+      status = 'AI is thinking...';
+    } else {
+      status = `Next player: ${currentPlayer}`;
     }
   }
 
   const moves = history.map((squares, move) => {
-    const desc = move ? `Go to move #${move}` : 'Go to game start';
+    const desc = move > 0 ? `Go to move #${move}` : 'Go to game start';
     return (
       <li key={move}>
         <button 
+          className="btn btn-secondary btn-small"
           onClick={() => jumpTo(move)}
-          className={move === currentMove ? 'current-move' : ''}
         >
           {desc}
         </button>
@@ -151,7 +154,7 @@ function App() {
   return (
     <div className="App">
       <header className="App-header">
-        <h1>Tic-Tac-Toe</h1>
+        <h1>🎮 Tic-Tac-Toe</h1>
       </header>
       
       <div className="game-container">
@@ -159,51 +162,83 @@ function App() {
           <div className="status" role="status" aria-live="polite">
             {status}
           </div>
-          <Board
-            squares={currentSquares}
+          
+          <Board 
+            squares={currentSquares} 
             onClick={handleClick}
             winningLine={winnerInfo?.line}
           />
+          
           <div className="game-controls">
-            <button onClick={resetGame} className="btn btn-primary">
+            <button className="btn btn-primary" onClick={resetGame}>
               New Game
             </button>
-            <button onClick={toggleGameMode} className="btn btn-secondary">
-              Mode: {gameMode === 'pvp' ? 'Player vs Player' : 'Player vs AI'}
-            </button>
-            {gameMode === 'ai' && (
-              <button onClick={togglePlayerSymbol} className="btn btn-secondary">
-                Play as: {playerSymbol}
-              </button>
-            )}
-          </div>
-        </div>
-
-        <div className="game-info">
-          <div className="scoreboard">
-            <h3>Scoreboard</h3>
-            <div className="scores">
-              <div className="score-item">
-                <span className="score-label">X Wins:</span>
-                <span className="score-value">{scores.X}</span>
-              </div>
-              <div className="score-item">
-                <span className="score-label">O Wins:</span>
-                <span className="score-value">{scores.O}</span>
-              </div>
-              <div className="score-item">
-                <span className="score-label">Draws:</span>
-                <span className="score-value">{scores.draws}</span>
-              </div>
-            </div>
-            <button onClick={resetScores} className="btn btn-small">
+            <button className="btn btn-secondary" onClick={resetScores}>
               Reset Scores
             </button>
           </div>
 
-          <div className="game-history">
-            <h3>Game History</h3>
-            <ol>{moves}</ol>
+          <div className="mode-selector">
+            <h3>Game Mode</h3>
+            <div className="mode-buttons">
+              <button 
+                className={`btn ${gameMode === 'pvp' ? 'btn-active' : 'btn-secondary'}`}
+                onClick={() => changeGameMode('pvp')}
+              >
+                Player vs Player
+              </button>
+              <button 
+                className={`btn ${gameMode === 'ai' ? 'btn-active' : 'btn-secondary'}`}
+                onClick={() => changeGameMode('ai')}
+              >
+                Player vs AI
+              </button>
+            </div>
+          </div>
+
+          {gameMode === 'ai' && (
+            <div className="symbol-selector">
+              <h3>Play as</h3>
+              <div className="mode-buttons">
+                <button 
+                  className={`btn ${playerSymbol === 'X' ? 'btn-active' : 'btn-secondary'}`}
+                  onClick={() => changePlayerSymbol('X')}
+                >
+                  X
+                </button>
+                <button 
+                  className={`btn ${playerSymbol === 'O' ? 'btn-active' : 'btn-secondary'}`}
+                  onClick={() => changePlayerSymbol('O')}
+                >
+                  O
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+
+        <div className="game-info">
+          <div className="scoreboard">
+            <h2>Scoreboard</h2>
+            <div className="score-grid">
+              <div className="score-item">
+                <span className="score-label">X Wins</span>
+                <span className="score-value">{scores.X}</span>
+              </div>
+              <div className="score-item">
+                <span className="score-label">O Wins</span>
+                <span className="score-value">{scores.O}</span>
+              </div>
+              <div className="score-item">
+                <span className="score-label">Draws</span>
+                <span className="score-value">{scores.draws}</span>
+              </div>
+            </div>
+          </div>
+
+          <div className="history">
+            <h2>Game History</h2>
+            <ol className="history-list">{moves}</ol>
           </div>
         </div>
       </div>

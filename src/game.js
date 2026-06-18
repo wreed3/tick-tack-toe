@@ -77,17 +77,20 @@ export function getBestMove(squares, player) {
     if (squares[b] === opponent && squares[c] === opponent && squares[a] === null) return a;
   }
 
-  // Take center
+  // Take center if available
   if (squares[4] === null) return 4;
 
-  // Take corner
+  // Take a corner
   const corners = [0, 2, 6, 8];
   const availableCorners = corners.filter(i => squares[i] === null);
   if (availableCorners.length > 0) {
     return availableCorners[Math.floor(Math.random() * availableCorners.length)];
   }
 
-  // Take any available space
-  const available = squares.map((sq, i) => sq === null ? i : null).filter(i => i !== null);
-  return available[Math.floor(Math.random() * available.length)];
+  // Take any available square
+  const availableSquares = squares
+    .map((square, index) => square === null ? index : null)
+    .filter(val => val !== null);
+  
+  return availableSquares[Math.floor(Math.random() * availableSquares.length)];
 }

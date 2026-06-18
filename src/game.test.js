@@ -74,9 +74,11 @@ describe('getBestMove', () => {
     expect(move).toBe(4);
   });
 
-  test('returns valid move', () => {
-    const squares = ['X', 'O', 'X', 'O', 'X', 'O', null, null, null];
-    const move = getBestMove(squares, 'X');
-    expect([6, 7, 8]).toContain(move);
+  test('returns a valid move', () => {
+    const squares = ['X', 'O', 'X', null, null, null, null, null, null];
+    const move = getBestMove(squares, 'O');
+    expect(move).toBeGreaterThanOrEqual(0);
+    expect(move).toBeLessThan(9);
+    expect(squares[move]).toBeNull();
   });
 });
