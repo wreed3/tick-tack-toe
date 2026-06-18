@@ -1,46 +1,79 @@
-import { initialState, reducer } from "./game";
+import { calculateWinner, isBoardFull, getBestMove } from './game';
 
-test('marks an X on the first move', () => {
-  const row = Math.floor(Math.random() * 3); // 0, 1, 2
-  const col = Math.floor(Math.random() * 3); // 0, 1, 2
+describe('calculateWinner', () => {
+  it('returns null for an empty board', () => {
+    const squares = Array(9).fill(null);
+    expect(calculateWinner(squares)).toBeNull();
+  });
 
-  const nextState = reducer(initialState, { row, col });
+  it('detects horizontal wins', () => {
+    const squares = ['X', 'X', 'X', null, null, null, null, null, null];
+    const result = calculateWinner(squares);
+    expect(result.winner).toBe('X');
+    expect(result.line).toEqual([0, 1, 2]);
+  });
 
-  expect(nextState.player).toEqual('O');
-  expect(nextState.board[row][col]).toEqual('X');
+  it('detects vertical wins', () => {
+    const squares = ['O', null, null, 'O', null, null, 'O', null, null];
+    const result = calculateWinner(squares);
+    expect(result.winner).toBe('O');
+    expect(result.line).toEqual([0, 3, 6]);
+  });
+
+  it('detects diagonal wins', () => {
+    const squares = ['X', null, null, null, 'X', null, null, null, 'X'];
+    const result = calculateWinner(squares);
+    expect(result.winner).toBe('X');
+    expect(result.line).toEqual([0, 4, 8]);
+  });
+
+  it('returns null for a draw', () => {
+    const squares = ['X', 'O', 'X', 'X', 'O', 'O', 'O', 'X', 'X'];
+    expect(calculateWinner(squares)).toBeNull();
+  });
 });
 
-test('marks an O on the second move', () => {
-  const firstState = reducer(initialState, { row: 0, col: 0 });
-  const secondState = reducer(firstState, { row: 1, col: 0 });
+describe('isBoardFull', () => {
+  it('returns false for an empty board', () => {
+    const squares = Array(9).fill(null);
+    expect(isBoardFull(squares)).toBe(false);
+  });
 
-  expect(secondState.player).toEqual('X');
-  expect(secondState.board[0][0]).toEqual('X');
-  expect(secondState.board[1][0]).toEqual('O');
+  it('returns false for a partially filled board', () => {
+    const squares = ['X', 'O', null, 'X', null, null, null, null, null];
+    expect(isBoardFull(squares)).toBe(false);
+  });
+
+  it('returns true for a full board', () => {
+    const squares = ['X', 'O', 'X', 'X', 'O', 'O', 'O', 'X', 'X'];
+    expect(isBoardFull(squares)).toBe(true);
+  });
 });
 
-test('cannot mark an already taken square', () => {
-  const firstState = reducer(initialState, { row: 0, col: 0 });
-  const secondState = reducer(firstState, { row: 0, col: 0 });
+describe('getBestMove', () => {
+  it('takes a winning move when available', () => {
+    const squares = ['X', 'X', null, 'O', 'O', null, null, null, null];
+    const move = getBestMove(squares, 'X');
+    expect(move).toBe(2); // Winning move for X
+  });
 
-  expect(secondState.player).toEqual('O');
-  expect(secondState.board[0][0]).toEqual('X');
-  expect(secondState.error).toEqual('Illegal move');
-});
+  it('blocks opponent winning move', () => {
+    const squares = ['O', 'O', null, 'X', null, null, null, null, null];
+    const move = getBestMove(squares, 'X');
+    expect(move).toBe(2); // Block O from winning
+  });
 
-test('sets a winner', () => {
-  const beforeWinningState = {
-    player: 'X',
-    board: [
-      ['X', 'O', ''],
-      ['O', 'X', ''],
-      ['', '', ''],
-    ],
-    winner: null,
-  };
+  it('takes center when available', () => {
+    const squares = ['X', null, null, null, null, null, null, null, 'O'];
+    const move = getBestMove(squares, 'X');
+    expect(move).toBe(4); // Center square
+  });
 
-  const winningState = reducer(beforeWinningState, { row: 2, col: 2 });
-
-  expect(winningState.board[2][2]).toEqual('X');
-  expect(winningState.winner).toEqual('X');
+  it('returns a valid move', () => {
+    const squares = ['X', 'O', 'X', null, null, null, null, null, null];
+    const move = getBestMove(squares, 'O');
+    expect(move).toBeGreaterThanOrEqual(0);
+    expect(move).toBeLessThan(9);
+    expect(squares[move]).toBeNull();
+  });
 });
