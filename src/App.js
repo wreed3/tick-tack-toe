@@ -3,31 +3,33 @@ import './App.css';
 import { calculateWinner } from './game';
 
 function Square({ value, onClick, isWinning }) {
+  const getEmoji = (val) => {
+    if (val === 'X') return '🎃';
+    if (val === 'O') return '👻';
+    return '';
+  };
+
   return (
     <button 
       className={`square ${isWinning ? 'winning' : ''}`}
       onClick={onClick}
     >
-      {value && <span className="square-content">{value}</span>}
+      {value && <span className="piece">{getEmoji(value)}</span>}
     </button>
   );
 }
 
-function Board({ squares, onClick, winningSquares }) {
-  const renderSquare = (i) => {
-    return (
-      <Square
-        key={i}
-        value={squares[i]}
-        onClick={() => onClick(i)}
-        isWinning={winningSquares && winningSquares.includes(i)}
-      />
-    );
-  };
-
+function Board({ squares, onClick, winningLine }) {
   return (
     <div className="board">
-      {[0, 1, 2, 3, 4, 5, 6, 7, 8].map(i => renderSquare(i))}
+      {squares.map((square, i) => (
+        <Square
+          key={i}
+          value={square}
+          onClick={() => onClick(i)}
+          isWinning={winningLine && winningLine.includes(i)}
+        />
+      ))}
     </div>
   );
 }
@@ -36,58 +38,68 @@ function App() {
   const [squares, setSquares] = useState(Array(9).fill(null));
   const [xIsNext, setXIsNext] = useState(true);
 
+  const result = calculateWinner(squares);
+  const winner = result ? result.winner : null;
+  const winningLine = result ? result.line : null;
+
   const handleClick = (i) => {
-    if (squares[i] || calculateWinner(squares)) {
+    if (winner || squares[i]) {
       return;
     }
 
     const newSquares = squares.slice();
-    newSquares[i] = xIsNext ? '🎃' : '👻';
+    newSquares[i] = xIsNext ? 'X' : 'O';
     setSquares(newSquares);
     setXIsNext(!xIsNext);
   };
 
-  const handleReset = () => {
+  const handleRestart = () => {
     setSquares(Array(9).fill(null));
     setXIsNext(true);
   };
 
-  const winnerInfo = calculateWinner(squares);
-  const winner = winnerInfo ? winnerInfo.winner : null;
-  const winningSquares = winnerInfo ? winnerInfo.line : null;
-
-  let status;
-  let statusClass = '';
-  
-  if (winner) {
-    const winnerName = winner === '🎃' ? 'Pumpkin' : 'Ghost';
-    status = `👑 ${winnerName} Wins! 👑`;
-    statusClass = 'winner';
-  } else if (squares.every(square => square !== null)) {
-    status = '🦇 Draw! Try Again! 🦇';
-  } else {
-    const nextPlayer = xIsNext ? '🎃 Pumpkin' : '👻 Ghost';
-    status = `Next player: ${nextPlayer}`;
-  }
+  const getStatus = () => {
+    if (winner) {
+      const emoji = winner === 'X' ? '🎃' : '👻';
+      const name = winner === 'X' ? 'Pumpkin' : 'Ghost';
+      return `${emoji} ${name} Wins! ${emoji}`;
+    } else if (squares.every(square => square !== null)) {
+      return "👻 It's a Spooky Draw! 🎃";
+    } else {
+      const emoji = xIsNext ? '🎃' : '👻';
+      const name = xIsNext ? 'Pumpkin' : 'Ghost';
+      return `${name}'s Turn ${emoji}`;
+    }
+  };
 
   return (
     <div className="App">
-      {/* Floating bats for atmosphere */}
-      <div className="bat" style={{ top: '10%' }}>🦇</div>
-      <div className="bat" style={{ top: '30%' }}>🦇</div>
-      <div className="bat" style={{ top: '50%' }}>🦇</div>
-      <div className="bat" style={{ top: '70%' }}>🦇</div>
-      <div className="bat" style={{ top: '90%' }}>🦇</div>
+      <h1 className="game-title">SPOOKY SHOWDOWN</h1>
+      <p className="game-subtitle">🕷️ Halloween Tic-Tac-Toe 🕷️</p>
+      
+      <div className="player-indicator">
+        <div className={`player ${xIsNext && !winner ? 'active' : ''}`}>
+          <span className="player-icon">🎃</span>
+          <span className="player-label">Pumpkin</span>
+        </div>
+        <div className={`player ${!xIsNext && !winner ? 'active' : ''}`}>
+          <span className="player-icon">👻</span>
+          <span className="player-label">Ghost</span>
+        </div>
+      </div>
 
-      <div className="game-container">
-        <h1>🎃 Spooky Showdown 👻</h1>
-        <div className={`status ${statusClass}`}>{status}</div>
-        <Board 
-          squares={squares} 
-          onClick={handleClick}
-          winningSquares={winningSquares}
-        />
-        <button className="reset-button" onClick={handleReset}>
+      <div className={`status ${winner ? 'winner' : ''}`}>
+        {getStatus()}
+      </div>
+
+      <Board
+        squares={squares}
+        onClick={handleClick}
+        winningLine={winningLine}
+      />
+
+      <div className="controls">
+        <button className="restart-button" onClick={handleRestart}>
           🎃 New Game 👻
         </button>
       </div>

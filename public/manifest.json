@@ -1,6 +1,6 @@
 {
   "short_name": "Spooky Showdown",
-  "name": "Halloween Tic-Tac-Toe - Pumpkins vs Ghosts",
+  "name": "Halloween Tic-Tac-Toe - Spooky Showdown",
   "icons": [
     {
       "src": "favicon.ico",
@@ -20,6 +20,7 @@
   ],
   "start_url": ".",
   "display": "standalone",
-  "theme_color": "#1a0b2e",
-  "background_color": "#1a0b2e"
+  "theme_color": "#1a0a2e",
+  "background_color": "#1a0a2e",
+  "description": "A spooky Halloween-themed Tic-Tac-Toe game where Pumpkins battle Ghosts!"
 }

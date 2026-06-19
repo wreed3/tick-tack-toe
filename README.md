@@ -1,70 +1,179 @@
-# Getting Started with Create React App
+# 🎃 Halloween Tic-Tac-Toe 👻
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+A spooky Halloween-themed twist on the classic Tic-Tac-Toe game! Battle it out as either a Pumpkin 🎃 or a Ghost 👻 in this haunted showdown.
 
-## Available Scripts
+![Halloween Tic-Tac-Toe](https://img.shields.io/badge/Theme-Halloween-orange?style=for-the-badge)
+![React](https://img.shields.io/badge/React-18.0.0-blue?style=for-the-badge&logo=react)
+![License](https://img.shields.io/badge/License-MIT-green?style=for-the-badge)
 
-In the project directory, you can run:
+## 🕷️ Features
 
-### `npm start`
+- **Spooky Theme**: Dark purple and orange color scheme with glowing effects
+- **Halloween Characters**: Play as Pumpkin (🎃) vs Ghost (👻)
+- **Animated Gameplay**: Smooth animations for piece placement and winning combinations
+- **Atmospheric Design**: Twinkling stars, glowing borders, and haunted aesthetics
+- **Responsive Layout**: Works great on desktop and mobile devices
+- **Victory Celebrations**: Special animations and messages when someone wins
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+## 🎮 How to Play
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+1. **Pumpkin** (🎃) always goes first
+2. Click on any empty square to place your piece
+3. Get three in a row (horizontally, vertically, or diagonally) to win!
+4. Click "New Game" to start over
 
-### `npm test`
+## 🚀 Getting Started
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+### Prerequisites
 
-### `npm run build`
+- Node.js (v14 or higher)
+- npm (v6 or higher)
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+### Installation
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+1. Clone the repository:
+```bash
+git clone https://github.com/wreed3/tick-tack-toe.git
+cd tick-tack-toe
+```
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+2. Install dependencies:
+```bash
+npm install
+```
 
-### `npm run eject`
+3. Start the development server:
+```bash
+npm start
+```
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+4. Open [http://localhost:3000](http://localhost:3000) in your browser
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+The game will automatically reload when you make changes.
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+## 🧪 Running Tests
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+Launch the test runner in interactive watch mode:
 
-## Learn More
+```bash
+npm test
+```
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+## 🏗️ Building for Production
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+Create an optimized production build:
 
-### Code Splitting
+```bash
+npm run build
+```
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+The build will be created in the `build/` folder, ready for deployment.
 
-### Analyzing the Bundle Size
+## 🎨 Customization
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
+### Changing Colors
 
-### Making a Progressive Web App
+Edit `src/App.css` to modify the color scheme:
+- Background gradient: `body` selector
+- Glow effects: `.game-title` and `.square` selectors
+- Border colors: `.square` and `.App` selectors
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
+### Changing Game Pieces
 
-### Advanced Configuration
+Edit `src/App.js`, find the `getEmoji()` function in the `Square` component:
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
+```javascript
+const getEmoji = (val) => {
+  if (val === 'X') return '🎃';  // Change pumpkin emoji
+  if (val === 'O') return '👻';  // Change ghost emoji
+  return '';
+};
+```
 
-### Deployment
+### Adding Sound Effects
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
+To add spooky sound effects:
 
-### `npm run build` fails to minify
+1. Create a `src/sounds/` directory
+2. Add your audio files (e.g., `place.mp3`, `win.mp3`)
+3. Import and play them in `src/App.js`:
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+```javascript
+const placeSound = new Audio('/sounds/place.mp3');
+placeSound.play();
+```
+
+## 📁 Project Structure
+
+```
+tick-tack-toe/
+├── public/
+│   ├── index.html          # HTML template with Halloween theme
+│   ├── manifest.json       # PWA manifest with spooky branding
+│   └── favicon.ico         # App icon
+├── src/
+│   ├── App.js              # Main game component with Halloween UI
+│   ├── App.css             # Halloween styling and animations
+│   ├── App.test.js         # Component tests
+│   ├── game.js             # Game logic (winner calculation)
+│   ├── game.test.js        # Game logic tests
+│   └── index.js            # React entry point
+└── package.json
+```
+
+## 🛠️ Technologies Used
+
+- **React 18.0** - UI framework
+- **Create React App** - Build tooling
+- **CSS3** - Animations and styling
+- **Google Fonts** - Creepster & Nosifer fonts
+- **Jest & React Testing Library** - Testing
+
+## 🎃 Theme Details
+
+### Color Palette
+- **Background**: Deep purple (#1a0a2e) with gradient
+- **Primary Accent**: Halloween orange (#ff6600)
+- **Secondary Accent**: Purple (#9d4edd)
+- **Winning**: Neon green (#00ff00)
+
+### Fonts
+- **Title**: Nosifer (Google Fonts)
+- **Body**: Creepster (Google Fonts)
+
+### Animations
+- Glowing title effect
+- Piece placement with rotation
+- Winning square pulse
+- Hover effects with glow
+- Twinkling star background
+
+## 🐛 Known Issues
+
+- Emoji rendering may vary slightly across different browsers and operating systems
+- Some older browsers may not support all CSS animations
+
+## 🤝 Contributing
+
+Contributions are welcome! Feel free to:
+- Report bugs
+- Suggest new features
+- Submit pull requests
+
+## 📄 License
+
+This project is licensed under the MIT License.
+
+## 🙏 Acknowledgments
+
+- Built with [Create React App](https://create-react-app.dev/)
+- Fonts from [Google Fonts](https://fonts.google.com/)
+- Original Tic-Tac-Toe logic based on React tutorial
+
+## 🎉 Have Fun!
+
+Enjoy this spooky twist on a classic game! Perfect for Halloween parties or just getting into the spooky spirit! 🦇🕸️
+
+---
+
+**Happy Halloween! 🎃👻🕷️**
