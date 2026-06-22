@@ -1,98 +1,120 @@
 import React, { useState } from 'react';
 import './App.css';
-import { calculateWinner } from './game';
+import { calculateWinner, isBoardFull, getInspirationalMessage } from './game';
 
-function Square({ value, onClick, isWinning }) {
+function Square({ value, onSquareClick, isWinning }) {
   return (
     <button 
-      className={`square ${isWinning ? 'winning' : ''}`}
-      onClick={onClick}
+      className={`square ${isWinning ? 'winning' : ''}`} 
+      onClick={onSquareClick}
     >
-      {value && <span className="square-content">{value}</span>}
+      {value}
     </button>
   );
 }
 
-function Board({ squares, onClick, winningSquares }) {
-  const renderSquare = (i) => {
-    return (
-      <Square
-        key={i}
-        value={squares[i]}
-        onClick={() => onClick(i)}
-        isWinning={winningSquares && winningSquares.includes(i)}
-      />
-    );
-  };
+function Board({ crossIsNext, squares, onPlay }) {
+  const result = calculateWinner(squares);
+  const winner = result?.winner;
+  const winningLine = result?.line || [];
+  const isDraw = !winner && isBoardFull(squares);
 
-  return (
-    <div className="board">
-      {[0, 1, 2, 3, 4, 5, 6, 7, 8].map(i => renderSquare(i))}
-    </div>
-  );
-}
-
-function App() {
-  const [squares, setSquares] = useState(Array(9).fill(null));
-  const [xIsNext, setXIsNext] = useState(true);
-
-  const handleClick = (i) => {
-    if (squares[i] || calculateWinner(squares)) {
+  function handleClick(i) {
+    if (squares[i] || winner) {
       return;
     }
-
-    const newSquares = squares.slice();
-    newSquares[i] = xIsNext ? '🎃' : '👻';
-    setSquares(newSquares);
-    setXIsNext(!xIsNext);
-  };
-
-  const handleReset = () => {
-    setSquares(Array(9).fill(null));
-    setXIsNext(true);
-  };
-
-  const winnerInfo = calculateWinner(squares);
-  const winner = winnerInfo ? winnerInfo.winner : null;
-  const winningSquares = winnerInfo ? winnerInfo.line : null;
+    const nextSquares = squares.slice();
+    nextSquares[i] = crossIsNext ? '✝' : '🐟';
+    onPlay(nextSquares);
+  }
 
   let status;
-  let statusClass = '';
+  let message = '';
   
   if (winner) {
-    const winnerName = winner === '🎃' ? 'Pumpkin' : 'Ghost';
-    status = `👑 ${winnerName} Wins! 👑`;
-    statusClass = 'winner';
-  } else if (squares.every(square => square !== null)) {
-    status = '🦇 Draw! Try Again! 🦇';
+    status = `Victory for ${winner === '✝' ? 'Cross' : 'Fish'}!`;
+    message = getInspirationalMessage(winner, false);
+  } else if (isDraw) {
+    status = "It's a draw!";
+    message = getInspirationalMessage(null, true);
   } else {
-    const nextPlayer = xIsNext ? '🎃 Pumpkin' : '👻 Ghost';
-    status = `Next player: ${nextPlayer}`;
+    status = `Next player: ${crossIsNext ? '✝ Cross' : '🐟 Fish'}`;
   }
 
   return (
-    <div className="App">
-      {/* Floating bats for atmosphere */}
-      <div className="bat" style={{ top: '10%' }}>🦇</div>
-      <div className="bat" style={{ top: '30%' }}>🦇</div>
-      <div className="bat" style={{ top: '50%' }}>🦇</div>
-      <div className="bat" style={{ top: '70%' }}>🦇</div>
-      <div className="bat" style={{ top: '90%' }}>🦇</div>
+    <>
+      <div className="status">{status}</div>
+      {message && <div className="message">{message}</div>}
+      <div className="board">
+        {[0, 1, 2].map(row => (
+          <div key={row} className="board-row">
+            {[0, 1, 2].map(col => {
+              const i = row * 3 + col;
+              return (
+                <Square
+                  key={i}
+                  value={squares[i]}
+                  onSquareClick={() => handleClick(i)}
+                  isWinning={winningLine.includes(i)}
+                />
+              );
+            })}
+          </div>
+        ))}
+      </div>
+    </>
+  );
+}
 
-      <div className="game-container">
-        <h1>🎃 Spooky Showdown 👻</h1>
-        <div className={`status ${statusClass}`}>{status}</div>
-        <Board 
-          squares={squares} 
-          onClick={handleClick}
-          winningSquares={winningSquares}
-        />
-        <button className="reset-button" onClick={handleReset}>
-          🎃 New Game 👻
-        </button>
+export default function Game() {
+  const [history, setHistory] = useState([Array(9).fill(null)]);
+  const [currentMove, setCurrentMove] = useState(0);
+  const crossIsNext = currentMove % 2 === 0;
+  const currentSquares = history[currentMove];
+
+  function handlePlay(nextSquares) {
+    const nextHistory = [...history.slice(0, currentMove + 1), nextSquares];
+    setHistory(nextHistory);
+    setCurrentMove(nextHistory.length - 1);
+  }
+
+  function jumpTo(nextMove) {
+    setCurrentMove(nextMove);
+  }
+
+  function resetGame() {
+    setHistory([Array(9).fill(null)]);
+    setCurrentMove(0);
+  }
+
+  const moves = history.map((squares, move) => {
+    let description;
+    if (move > 0) {
+      description = 'Go to move #' + move;
+    } else {
+      description = 'Go to game start';
+    }
+    return (
+      <li key={move}>
+        <button onClick={() => jumpTo(move)}>{description}</button>
+      </li>
+    );
+  });
+
+  return (
+    <div className="game">
+      <div className="game-header">
+        <h1>⛪ Faith & Fellowship Tic-Tac-Toe ⛪</h1>
+        <p className="scripture">"For where two or three gather in my name, there am I with them." - Matthew 18:20</p>
+      </div>
+      <div className="game-board">
+        <Board crossIsNext={crossIsNext} squares={currentSquares} onPlay={handlePlay} />
+        <button className="reset-button" onClick={resetGame}>New Game</button>
+      </div>
+      <div className="game-info">
+        <h3>Game History</h3>
+        <ol>{moves}</ol>
       </div>
     </div>
   );
 }
-
-export default App;
