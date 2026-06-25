@@ -13,11 +13,6 @@ const createBoard = () => {
 const checkWinner = (board) => {
   // Check all possible winning lines in 3D space
   // Total: 49 possible winning lines
-  // - 9 rows per layer (3 layers) = 27
-  // - 9 columns per layer (3 layers) = 27  
-  // - 9 vertical lines through layers = 9
-  // - 4 diagonals per layer (3 layers) = 12
-  // - 4 space diagonals through the cube = 4
   
   // Helper to check if three cells are the same and not null
   const checkLine = (cells) => {
