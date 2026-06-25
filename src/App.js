@@ -1,120 +1,79 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import './App.css';
-import { calculateWinner, isBoardFull, getInspirationalMessage } from './game';
+import { createBoard, checkWinner, isBoardFull, makeMove } from './game';
+import GameBoard3D from './GameBoard3D';
 
-function Square({ value, onSquareClick, isWinning }) {
-  return (
-    <button 
-      className={`square ${isWinning ? 'winning' : ''}`} 
-      onClick={onSquareClick}
-    >
-      {value}
-    </button>
-  );
-}
+function App() {
+  const [board, setBoard] = useState(createBoard());
+  const [currentPlayer, setCurrentPlayer] = useState('X');
+  const [winner, setWinner] = useState(null);
+  const [isDraw, setIsDraw] = useState(false);
+  const [winningCells, setWinningCells] = useState([]);
 
-function Board({ crossIsNext, squares, onPlay }) {
-  const result = calculateWinner(squares);
-  const winner = result?.winner;
-  const winningLine = result?.line || [];
-  const isDraw = !winner && isBoardFull(squares);
+  const handleCellClick = (z, y, x) => {
+    if (winner || isDraw || board[z][y][x]) return;
 
-  function handleClick(i) {
-    if (squares[i] || winner) {
-      return;
-    }
-    const nextSquares = squares.slice();
-    nextSquares[i] = crossIsNext ? '✝' : '🐟';
-    onPlay(nextSquares);
-  }
+    const newBoard = makeMove(board, z, y, x, currentPlayer);
+    if (!newBoard) return;
 
-  let status;
-  let message = '';
-  
-  if (winner) {
-    status = `Victory for ${winner === '✝' ? 'Cross' : 'Fish'}!`;
-    message = getInspirationalMessage(winner, false);
-  } else if (isDraw) {
-    status = "It's a draw!";
-    message = getInspirationalMessage(null, true);
-  } else {
-    status = `Next player: ${crossIsNext ? '✝ Cross' : '🐟 Fish'}`;
-  }
+    setBoard(newBoard);
 
-  return (
-    <>
-      <div className="status">{status}</div>
-      {message && <div className="message">{message}</div>}
-      <div className="board">
-        {[0, 1, 2].map(row => (
-          <div key={row} className="board-row">
-            {[0, 1, 2].map(col => {
-              const i = row * 3 + col;
-              return (
-                <Square
-                  key={i}
-                  value={squares[i]}
-                  onSquareClick={() => handleClick(i)}
-                  isWinning={winningLine.includes(i)}
-                />
-              );
-            })}
-          </div>
-        ))}
-      </div>
-    </>
-  );
-}
-
-export default function Game() {
-  const [history, setHistory] = useState([Array(9).fill(null)]);
-  const [currentMove, setCurrentMove] = useState(0);
-  const crossIsNext = currentMove % 2 === 0;
-  const currentSquares = history[currentMove];
-
-  function handlePlay(nextSquares) {
-    const nextHistory = [...history.slice(0, currentMove + 1), nextSquares];
-    setHistory(nextHistory);
-    setCurrentMove(nextHistory.length - 1);
-  }
-
-  function jumpTo(nextMove) {
-    setCurrentMove(nextMove);
-  }
-
-  function resetGame() {
-    setHistory([Array(9).fill(null)]);
-    setCurrentMove(0);
-  }
-
-  const moves = history.map((squares, move) => {
-    let description;
-    if (move > 0) {
-      description = 'Go to move #' + move;
+    const gameWinner = checkWinner(newBoard);
+    if (gameWinner) {
+      setWinner(gameWinner);
+      // You could enhance this to highlight the winning line
+      setWinningCells([]);
+    } else if (isBoardFull(newBoard)) {
+      setIsDraw(true);
     } else {
-      description = 'Go to game start';
+      setCurrentPlayer(currentPlayer === 'X' ? 'O' : 'X');
     }
-    return (
-      <li key={move}>
-        <button onClick={() => jumpTo(move)}>{description}</button>
-      </li>
-    );
-  });
+  };
+
+  const resetGame = () => {
+    setBoard(createBoard());
+    setCurrentPlayer('X');
+    setWinner(null);
+    setIsDraw(false);
+    setWinningCells([]);
+  };
 
   return (
-    <div className="game">
-      <div className="game-header">
-        <h1>⛪ Faith & Fellowship Tic-Tac-Toe ⛪</h1>
-        <p className="scripture">"For where two or three gather in my name, there am I with them." - Matthew 18:20</p>
-      </div>
-      <div className="game-board">
-        <Board crossIsNext={crossIsNext} squares={currentSquares} onPlay={handlePlay} />
-        <button className="reset-button" onClick={resetGame}>New Game</button>
-      </div>
-      <div className="game-info">
-        <h3>Game History</h3>
-        <ol>{moves}</ol>
-      </div>
+    <div className="App">
+      <header className="App-header">
+        <h1>3D Tic-Tac-Toe</h1>
+        <div className="game-info">
+          {winner ? (
+            <h2>🎉 Player {winner} Wins!</h2>
+          ) : isDraw ? (
+            <h2>🤝 It's a Draw!</h2>
+          ) : (
+            <h2>Current Player: {currentPlayer}</h2>
+          )}
+        </div>
+        
+        <GameBoard3D 
+          board={board} 
+          onCellClick={handleCellClick}
+          winningCells={winningCells}
+        />
+        
+        <button className="reset-button" onClick={resetGame}>
+          Reset Game
+        </button>
+        
+        <div className="instructions">
+          <h3>How to Play:</h3>
+          <ul>
+            <li>🖱️ Click and drag to rotate the cube</li>
+            <li>🔍 Scroll to zoom in/out</li>
+            <li>🎯 Click any empty cell to place your mark</li>
+            <li>🏆 Get 3 in a row (any direction!) to win</li>
+          </ul>
+        </div>
+      </header>
     </div>
   );
 }
+
+export default App;
