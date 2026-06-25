@@ -1,93 +1,16 @@
 .App {
+  text-align: center;
+  background-color: #282c34;
   min-height: 100vh;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-}
-
-.App-header {
-  padding: 2rem;
   color: white;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 1.5rem;
 }
 
-h1 {
+.App h1 {
   margin: 0;
-  font-size: 3rem;
-  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+  padding: 20px;
+  background-color: #1a1d24;
 }
 
-.game-info {
-  background: rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(10px);
-  padding: 1rem 2rem;
-  border-radius: 12px;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-}
-
-.game-info h2 {
-  margin: 0;
-  font-size: 1.5rem;
-}
-
-.reset-button {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-  border: none;
-  padding: 1rem 2rem;
-  font-size: 1.1rem;
-  border-radius: 8px;
-  cursor: pointer;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
-  transition: transform 0.2s, box-shadow 0.2s;
-}
-
-.reset-button:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
-}
-
-.reset-button:active {
-  transform: translateY(0);
-}
-
-.instructions {
-  background: rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(10px);
-  padding: 1.5rem;
-  border-radius: 12px;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  max-width: 500px;
-}
-
-.instructions h3 {
-  margin-top: 0;
-  font-size: 1.3rem;
-}
-
-.instructions ul {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-}
-
-.instructions li {
-  padding: 0.5rem 0;
-  font-size: 1.1rem;
-}
-
-/* Responsive design */
-@media (max-width: 768px) {
-  h1 {
-    font-size: 2rem;
-  }
-  
-  .game-info h2 {
-    font-size: 1.2rem;
-  }
-  
-  .instructions {
-    max-width: 90%;
-  }
+canvas {
+  display: block;
 }

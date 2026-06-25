@@ -1,18 +1,30 @@
-import { useState } from 'react';
+import React from 'react';
+import { Canvas } from '@react-three/fiber';
+import { OrbitControls } from '@react-three/drei';
 import './App.css';
 
-function App() {
-  const [count, setCount] = useState(0);
+// Simple test cube to verify Three.js is working
+function TestCube() {
+  return (
+    <mesh>
+      <boxGeometry args={[1, 1, 1]} />
+      <meshStandardMaterial color="orange" />
+    </mesh>
+  );
+}
 
+function App() {
   return (
     <div className="App">
-      <header className="App-header">
-        <h1>Test - Can you see this?</h1>
-        <p>If you can see this text, React is working!</p>
-        <button onClick={() => setCount(count + 1)}>
-          Clicked {count} times
-        </button>
-      </header>
+      <h1>3D Tic-Tac-Toe - Testing Three.js</h1>
+      <div style={{ width: '100vw', height: '80vh' }}>
+        <Canvas camera={{ position: [3, 3, 3], fov: 50 }}>
+          <ambientLight intensity={0.5} />
+          <pointLight position={[10, 10, 10]} />
+          <TestCube />
+          <OrbitControls />
+        </Canvas>
+      </div>
     </div>
   );
 }
