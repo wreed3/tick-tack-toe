@@ -7,33 +7,48 @@ function NameInput({ onStart }) {
   const [error, setError] = useState('');
 
   const sanitizeName = (name) => {
-    // Remove any HTML tags and special characters that could be used for XSS
-    return name.replace(/[<>'"&]/g, '').trim();
+    // Whitelist approach: only allow alphanumeric characters and spaces
+    return name.replace(/[^a-zA-Z0-9\s]/g, '').trim();
   };
 
   const normalizeName = (name) => {
-    // Normalize names to lowercase for consistent storage and comparison
-    return sanitizeName(name).toLowerCase();
+    // Normalize names to lowercase for comparison only
+    return name.toLowerCase().trim();
   };
 
   const handleStart = (e) => {
     e.preventDefault();
     
+    const sanitized1 = sanitizeName(player1Name);
+    const sanitized2 = sanitizeName(player2Name);
+    
     // Validate names
-    if (!player1Name.trim()) {
+    if (!sanitized1) {
       setError('Please enter Player 1 name');
       return;
     }
-    if (!player2Name.trim()) {
+    if (!sanitized2) {
       setError('Please enter Player 2 name');
       return;
     }
-    if (normalizeName(player1Name) === normalizeName(player2Name)) {
+    
+    // Validate length (enforce maxLength even if bypassed)
+    if (sanitized1.length > 20) {
+      setError('Player 1 name must be 20 characters or less');
+      return;
+    }
+    if (sanitized2.length > 20) {
+      setError('Player 2 name must be 20 characters or less');
+      return;
+    }
+    
+    // Case-insensitive comparison without modifying stored values
+    if (normalizeName(sanitized1) === normalizeName(sanitized2)) {
       setError('Players must have different names');
       return;
     }
 
-    onStart(sanitizeName(player1Name), sanitizeName(player2Name));
+    onStart(sanitized1, sanitized2);
   };
 
   const handlePlayer1Blur = (e) => {

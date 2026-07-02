@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { OrbitControls } from '@react-three/drei';
+import { ErrorBoundary } from 'react-error-boundary';
 import GameBoard3D from './GameBoard3D';
 import NameInput from './NameInput';
 import { createGame } from './game3d';
@@ -8,10 +9,29 @@ import confetti from 'canvas-confetti';
 import './App.css';
 
 const CONFETTI_DURATION = 3000;
+// Initial velocity of confetti particles in pixels per second
 const CONFETTI_START_VELOCITY = 30;
+// Spread angle of confetti particles in degrees (360 = full circle)
 const CONFETTI_SPREAD = 360;
+// Number of animation frames for confetti particles (higher = longer animation)
 const CONFETTI_TICKS = 60;
 const CONFETTI_Z_INDEX = 1000;
+
+function CanvasErrorFallback({ error, resetErrorBoundary }) {
+  return (
+    <div className="canvas-error-fallback" style={{ padding: '20px', textAlign: 'center' }}>
+      <h2>3D Rendering Error</h2>
+      <p>Unable to initialize 3D graphics. This may be due to:</p>
+      <ul style={{ textAlign: 'left', display: 'inline-block' }}>
+        <li>Unsupported browser or WebGL not available</li>
+        <li>GPU or graphics driver issues</li>
+        <li>Hardware acceleration disabled</li>
+      </ul>
+      <p style={{ fontSize: '0.9em', color: '#666' }}>{error.message}</p>
+      <button onClick={resetErrorBoundary}>Try Again</button>
+    </div>
+  );
+}
 
 function App() {
   const [game, setGame] = useState(null);
@@ -20,12 +40,8 @@ function App() {
   const [winner, setWinner] = useState(null);
   const [gameStarted, setGameStarted] = useState(false);
   const [playerNames, setPlayerNames] = useState({ X: '', O: '' });
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState(null);
 
   const handleStartGame = async (player1Name, player2Name) => {
-    setIsLoading(true);
-    setError(null);
     try {
       setPlayerNames({ X: player1Name, O: player2Name });
       const newGame = createGame();
@@ -36,10 +52,8 @@ function App() {
       setBoard(newGame.getBoard());
       setGameStarted(true);
     } catch (err) {
-      setError(err.message || 'Failed to initialize game');
       console.error('Game initialization error:', err);
-    } finally {
-      setIsLoading(false);
+      alert('Failed to initialize game. Please try again.');
     }
   };
 
@@ -105,8 +119,6 @@ function App() {
   };
 
   const resetGame = () => {
-    setIsLoading(true);
-    setError(null);
     try {
       const newGame = createGame();
       if (!newGame) {
@@ -117,10 +129,8 @@ function App() {
       setCurrentPlayer('X');
       setWinner(null);
     } catch (err) {
-      setError(err.message || 'Failed to reset game');
       console.error('Game reset error:', err);
-    } finally {
-      setIsLoading(false);
+      alert('Failed to reset game. Please try again.');
     }
   };
 
@@ -131,30 +141,7 @@ function App() {
     setCurrentPlayer('X');
     setWinner(null);
     setPlayerNames({ X: '', O: '' });
-    setError(null);
   };
-
-  if (isLoading) {
-    return (
-      <div className="App">
-        <div className="loading-screen">
-          <h2>Loading game...</h2>
-        </div>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="App">
-        <div className="error-screen">
-          <h2>Error</h2>
-          <p>{error}</p>
-          <button onClick={resetToNameInput}>Try Again</button>
-        </div>
-      </div>
-    );
-  }
 
   if (!gameStarted) {
     return <NameInput onStart={handleStartGame} />;
@@ -185,7 +172,7 @@ function App() {
             {playerNames.O} (O)
           </span>
         </div>
-        <div className={`status ${winner ? 'winner' : ''}`}>
+        <div className={`status ${winner ? 'winner' : ''}`} aria-live="polite" aria-atomic="true">
           {getStatusMessage()}
         </div>
         <div className="button-group">
@@ -198,12 +185,17 @@ function App() {
         </div>
       </div>
       
-      <Canvas camera={{ position: [4, 4, 4], fov: 50 }}>
-        <ambientLight intensity={0.5} />
-        <pointLight position={[10, 10, 10]} />
-        {board && <GameBoard3D board={board} onCellClick={handleCellClick} />}
-        <OrbitControls />
-      </Canvas>
+      <ErrorBoundary
+        FallbackComponent={CanvasErrorFallback}
+        onReset={resetGame}
+      >
+        <Canvas camera={{ position: [4, 4, 4], fov: 50 }}>
+          <ambientLight intensity={0.5} />
+          <pointLight position={[10, 10, 10]} />
+          {board && <GameBoard3D board={board} onCellClick={handleCellClick} />}
+          <OrbitControls />
+        </Canvas>
+      </ErrorBoundary>
     </div>
   );
 }
