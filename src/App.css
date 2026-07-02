@@ -95,7 +95,7 @@
 }
 
 .reset-button:active {
-  transform: translateY(0);
+  transform: translateY(0px);
 }
 
 @media (max-width: 768px) {

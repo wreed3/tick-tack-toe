@@ -1,11 +1,19 @@
-import React, { useRef } from 'react';
+import React from 'react';
 import { Canvas } from '@react-three/fiber';
 import { OrbitControls, PerspectiveCamera } from '@react-three/drei';
 import Cell3D from './Cell3D';
 
-function GameBoard3D({ board, onCellClick, currentPlayer }) {
+function GameBoard3D({ board, onCellClick, winningCells }) {
   const gridSize = 3;
   const cellSpacing = 2.5; // Increased spacing for larger board
+
+  // Helper function to check if a cell is part of the winning combination
+  const isWinningCell = (z, y, x) => {
+    if (!winningCells) return false;
+    return winningCells.some(
+      cell => cell[0] === z && cell[1] === y && cell[2] === x
+    );
+  };
 
   return (
     <Canvas shadows antialias alpha={false} dpr={[1, 2]}>
@@ -32,6 +40,9 @@ function GameBoard3D({ board, onCellClick, currentPlayer }) {
       <gridHelper args={[8, 8]} position={[0, -0.1, 0]} />
 
       {/* Game board */}
+      {/* Coordinate mapping: board[z][y][x] -> position[posX, posY, posZ]
+          where posX = (x-1)*spacing, posY = (z-1)*spacing, posZ = (y-1)*spacing
+          This transforms board coordinates to 3D space with z-axis as vertical */}
       <group>
         {board.map((layer, z) =>
           layer.map((row, y) =>
@@ -48,6 +59,7 @@ function GameBoard3D({ board, onCellClick, currentPlayer }) {
                   value={cell}
                   onClick={() => onCellClick(z, y, x)}
                   isHovered={false}
+                  isWinningCell={isWinningCell(z, y, x)}
                 />
               );
             })

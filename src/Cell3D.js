@@ -1,18 +1,18 @@
-import { useRef, useState } from 'react';
+import { useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { Text } from '@react-three/drei';
 
+const CELL_SIZE = 2;
+const CELL_HEIGHT = 0.3;
+
 function Cell3D({ position, value, onClick, isHovered, isWinningCell }) {
   const meshRef = useRef();
-  const [hovered, setHovered] = useState(false);
 
   useFrame((state) => {
     if (meshRef.current && value) {
       meshRef.current.rotation.y = Math.sin(state.clock.elapsedTime * 2) * 0.1;
     }
   });
-
-  const cellSize = 2; // Increased from default
 
   return (
     <group position={position}>
@@ -23,21 +23,13 @@ function Cell3D({ position, value, onClick, isHovered, isWinningCell }) {
           e.stopPropagation();
           onClick(e);
         }}
-        onPointerOver={(e) => {
-          e.stopPropagation();
-          setHovered(true);
-        }}
-        onPointerOut={(e) => {
-          e.stopPropagation();
-          setHovered(false);
-        }}
         castShadow
         receiveShadow
       >
-        <boxGeometry args={[cellSize, 0.3, cellSize]} />
+        <boxGeometry args={[CELL_SIZE, CELL_HEIGHT, CELL_SIZE]} />
         <meshStandardMaterial
-          color={isWinningCell ? '#4ade80' : (hovered && !value ? '#4299e1' : '#4a5568')}
-          emissive={isWinningCell ? '#22c55e' : (hovered && !value ? '#2c5282' : '#000000')}
+          color={isWinningCell ? '#4ade80' : (isHovered && !value ? '#4299e1' : '#4a5568')}
+          emissive={isWinningCell ? '#22c55e' : (isHovered && !value ? '#2c5282' : '#000000')}
           emissiveIntensity={0.3}
         />
       </mesh>
