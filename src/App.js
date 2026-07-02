@@ -1,149 +1,209 @@
-import React, { useState, useRef } from 'react';
-import { Canvas, useFrame } from '@react-three/fiber';
-import { OrbitControls, Text } from '@react-three/drei';
-import { createGame3D, makeMove } from './game3d';
+import React, { useState, useEffect } from 'react';
+import { Canvas } from '@react-three/fiber';
+import { OrbitControls } from '@react-three/drei';
+import GameBoard3D from './GameBoard3D';
+import NameInput from './NameInput';
+import { createGame } from './game3d';
+import confetti from 'canvas-confetti';
 import './App.css';
 
-// Individual cell in the 3D grid
-function Cell({ position, value, onClick }) {
-  const meshRef = useRef();
-  const [hovered, setHovered] = useState(false);
-
-  useFrame(() => {
-    if (meshRef.current && hovered && !value) {
-      meshRef.current.scale.x = 1.1;
-      meshRef.current.scale.y = 1.1;
-      meshRef.current.scale.z = 1.1;
-    } else if (meshRef.current) {
-      meshRef.current.scale.x = 1;
-      meshRef.current.scale.y = 1;
-      meshRef.current.scale.z = 1;
-    }
-  });
-
-  return (
-    <group position={position}>
-      {/* Cell box */}
-      <mesh
-        ref={meshRef}
-        onClick={onClick}
-        onPointerOver={() => setHovered(true)}
-        onPointerOut={() => setHovered(false)}
-      >
-        <boxGeometry args={[0.9, 0.9, 0.9]} />
-        <meshStandardMaterial
-          color={hovered && !value ? '#4a90e2' : '#2a2a2a'}
-          transparent
-          opacity={0.3}
-        />
-      </mesh>
-
-      {/* X or O marker */}
-      {value === 'X' && (
-        <>
-          <mesh position={[0, 0, 0]} rotation={[0, 0, Math.PI / 4]}>
-            <boxGeometry args={[0.1, 1, 0.1]} />
-            <meshStandardMaterial color="#ff6b6b" />
-          </mesh>
-          <mesh position={[0, 0, 0]} rotation={[0, 0, -Math.PI / 4]}>
-            <boxGeometry args={[0.1, 1, 0.1]} />
-            <meshStandardMaterial color="#ff6b6b" />
-          </mesh>
-        </>
-      )}
-
-      {value === 'O' && (
-        <mesh>
-          <torusGeometry args={[0.4, 0.1, 16, 32]} />
-          <meshStandardMaterial color="#4ecdc4" />
-        </mesh>
-      )}
-    </group>
-  );
-}
-
-// The 3D game board
-function Board3D({ game, onCellClick }) {
-  const cells = [];
-
-  for (let x = 0; x < 3; x++) {
-    for (let y = 0; y < 3; y++) {
-      for (let z = 0; z < 3; z++) {
-        const position = [
-          (x - 1) * 1.2,
-          (y - 1) * 1.2,
-          (z - 1) * 1.2
-        ];
-        cells.push(
-          <Cell
-            key={`${x}-${y}-${z}`}
-            position={position}
-            value={game.board[x][y][z]}
-            onClick={() => onCellClick(x, y, z)}
-          />
-        );
-      }
-    }
-  }
-
-  return (
-    <group>
-      {cells}
-      {/* Grid lines for reference */}
-      <gridHelper args={[4, 4]} position={[0, -2, 0]} />
-    </group>
-  );
-}
+const CONFETTI_DURATION = 3000;
+const CONFETTI_START_VELOCITY = 30;
+const CONFETTI_SPREAD = 360;
+const CONFETTI_TICKS = 60;
+const CONFETTI_Z_INDEX = 1000;
 
 function App() {
-  const [game, setGame] = useState(createGame3D());
+  const [game, setGame] = useState(null);
+  const [board, setBoard] = useState(null);
+  const [currentPlayer, setCurrentPlayer] = useState('X');
+  const [winner, setWinner] = useState(null);
+  const [gameStarted, setGameStarted] = useState(false);
+  const [playerNames, setPlayerNames] = useState({ X: '', O: '' });
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState(null);
 
-  const handleCellClick = (x, y, z) => {
-    if (!game.winner && !game.isDraw) {
-      setGame(makeMove(game, x, y, z));
+  const handleStartGame = async (player1Name, player2Name) => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      setPlayerNames({ X: player1Name, O: player2Name });
+      const newGame = createGame();
+      if (!newGame) {
+        throw new Error('Failed to create game');
+      }
+      setGame(newGame);
+      setBoard(newGame.getBoard());
+      setGameStarted(true);
+    } catch (err) {
+      setError(err.message || 'Failed to initialize game');
+      console.error('Game initialization error:', err);
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  const handleReset = () => {
-    setGame(createGame3D());
+  const triggerConfetti = () => {
+    const animationEnd = Date.now() + CONFETTI_DURATION;
+    const defaults = { 
+      startVelocity: CONFETTI_START_VELOCITY, 
+      spread: CONFETTI_SPREAD, 
+      ticks: CONFETTI_TICKS, 
+      zIndex: CONFETTI_Z_INDEX 
+    };
+
+    function randomInRange(min, max) {
+      return Math.random() * (max - min) + min;
+    }
+
+    const interval = setInterval(function() {
+      const timeLeft = animationEnd - Date.now();
+
+      if (timeLeft <= 0) {
+        return clearInterval(interval);
+      }
+
+      const particleCount = 50 * (timeLeft / CONFETTI_DURATION);
+      
+      // Launch confetti from two different positions
+      confetti({
+        ...defaults,
+        particleCount,
+        origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 }
+      });
+      confetti({
+        ...defaults,
+        particleCount,
+        origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 }
+      });
+    }, 250);
+  };
+
+  useEffect(() => {
+    if (winner && winner !== 'draw') {
+      triggerConfetti();
+    }
+  }, [winner]);
+
+  const handleCellClick = (x, y, z) => {
+    if (!game || winner) return;
+
+    const success = game.makeMove(x, y, z, currentPlayer);
+    if (success) {
+      const newBoard = game.getBoard();
+      if (newBoard) {
+        setBoard([...newBoard]);
+      }
+      
+      const gameWinner = game.checkWinner();
+      if (gameWinner) {
+        setWinner(gameWinner);
+      } else {
+        setCurrentPlayer(currentPlayer === 'X' ? 'O' : 'X');
+      }
+    }
+  };
+
+  const resetGame = () => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const newGame = createGame();
+      if (!newGame) {
+        throw new Error('Failed to create game');
+      }
+      setGame(newGame);
+      setBoard(newGame.getBoard());
+      setCurrentPlayer('X');
+      setWinner(null);
+    } catch (err) {
+      setError(err.message || 'Failed to reset game');
+      console.error('Game reset error:', err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const resetToNameInput = () => {
+    setGameStarted(false);
+    setGame(null);
+    setBoard(null);
+    setCurrentPlayer('X');
+    setWinner(null);
+    setPlayerNames({ X: '', O: '' });
+    setError(null);
+  };
+
+  if (isLoading) {
+    return (
+      <div className="App">
+        <div className="loading-screen">
+          <h2>Loading game...</h2>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="App">
+        <div className="error-screen">
+          <h2>Error</h2>
+          <p>{error}</p>
+          <button onClick={resetToNameInput}>Try Again</button>
+        </div>
+      </div>
+    );
+  }
+
+  if (!gameStarted) {
+    return <NameInput onStart={handleStartGame} />;
+  }
+
+  const getStatusMessage = () => {
+    if (winner === 'draw') {
+      return "It's a Draw! 🤝";
+    }
+    if (winner) {
+      const winnerName = playerNames[winner];
+      return `🎉 ${winnerName} Wins! 🎉`;
+    }
+    const currentPlayerName = playerNames[currentPlayer];
+    return `${currentPlayerName}'s Turn (${currentPlayer})`;
   };
 
   return (
     <div className="App">
-      <div className="header">
+      <div className="game-header">
         <h1>3D Tic-Tac-Toe</h1>
-        <div className="status">
-          {game.winner ? (
-            <span className="winner">🏆 Player {game.winner} Wins!</span>
-          ) : game.isDraw ? (
-            <span className="draw">🤝 Draw!</span>
-          ) : (
-            <span>Current Player: <strong>{game.currentPlayer}</strong></span>
-          )}
+        <div className="player-info">
+          <span className={currentPlayer === 'X' ? 'active' : ''}>
+            {playerNames.X} (X)
+          </span>
+          <span className="vs">vs</span>
+          <span className={currentPlayer === 'O' ? 'active' : ''}>
+            {playerNames.O} (O)
+          </span>
         </div>
-        <button onClick={handleReset} className="reset-button">
-          Reset Game
-        </button>
+        <div className={`status ${winner ? 'winner' : ''}`}>
+          {getStatusMessage()}
+        </div>
+        <div className="button-group">
+          <button onClick={resetGame} className="reset-button">
+            New Game
+          </button>
+          <button onClick={resetToNameInput} className="change-names-button">
+            Change Names
+          </button>
+        </div>
       </div>
-
-      <div className="canvas-container">
-        <Canvas camera={{ position: [5, 5, 5], fov: 50 }}>
-          <ambientLight intensity={0.5} />
-          <pointLight position={[10, 10, 10]} intensity={1} />
-          <pointLight position={[-10, -10, -10]} intensity={0.5} />
-          <Board3D game={game} onCellClick={handleCellClick} />
-          <OrbitControls 
-            enablePan={false}
-            minDistance={4}
-            maxDistance={10}
-          />
-        </Canvas>
-      </div>
-
-      <div className="instructions">
-        <p>🖱️ Drag to rotate • 🖱️ Scroll to zoom • 🎯 Click cells to play</p>
-        <p>Win by getting 3 in a row in any direction - including diagonals through the cube!</p>
-      </div>
+      
+      <Canvas camera={{ position: [4, 4, 4], fov: 50 }}>
+        <ambientLight intensity={0.5} />
+        <pointLight position={[10, 10, 10]} />
+        {board && <GameBoard3D board={board} onCellClick={handleCellClick} />}
+        <OrbitControls />
+      </Canvas>
     </div>
   );
 }
