@@ -7,6 +7,12 @@ import { createGame } from './game3d';
 import confetti from 'canvas-confetti';
 import './App.css';
 
+const CONFETTI_DURATION = 3000;
+const CONFETTI_START_VELOCITY = 30;
+const CONFETTI_SPREAD = 360;
+const CONFETTI_TICKS = 60;
+const CONFETTI_Z_INDEX = 1000;
+
 function App() {
   const [game, setGame] = useState(null);
   const [board, setBoard] = useState(null);
@@ -14,19 +20,37 @@ function App() {
   const [winner, setWinner] = useState(null);
   const [gameStarted, setGameStarted] = useState(false);
   const [playerNames, setPlayerNames] = useState({ X: '', O: '' });
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState(null);
 
-  const handleStartGame = (player1Name, player2Name) => {
-    setPlayerNames({ X: player1Name, O: player2Name });
-    const newGame = createGame();
-    setGame(newGame);
-    setBoard(newGame.getBoard());
-    setGameStarted(true);
+  const handleStartGame = async (player1Name, player2Name) => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      setPlayerNames({ X: player1Name, O: player2Name });
+      const newGame = createGame();
+      if (!newGame) {
+        throw new Error('Failed to create game');
+      }
+      setGame(newGame);
+      setBoard(newGame.getBoard());
+      setGameStarted(true);
+    } catch (err) {
+      setError(err.message || 'Failed to initialize game');
+      console.error('Game initialization error:', err);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const triggerConfetti = () => {
-    const duration = 3000;
-    const animationEnd = Date.now() + duration;
-    const defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 0 };
+    const animationEnd = Date.now() + CONFETTI_DURATION;
+    const defaults = { 
+      startVelocity: CONFETTI_START_VELOCITY, 
+      spread: CONFETTI_SPREAD, 
+      ticks: CONFETTI_TICKS, 
+      zIndex: CONFETTI_Z_INDEX 
+    };
 
     function randomInRange(min, max) {
       return Math.random() * (max - min) + min;
@@ -39,7 +63,7 @@ function App() {
         return clearInterval(interval);
       }
 
-      const particleCount = 50 * (timeLeft / duration);
+      const particleCount = 50 * (timeLeft / CONFETTI_DURATION);
       
       // Launch confetti from two different positions
       confetti({
@@ -66,7 +90,10 @@ function App() {
 
     const success = game.makeMove(x, y, z, currentPlayer);
     if (success) {
-      setBoard([...game.getBoard()]);
+      const newBoard = game.getBoard();
+      if (newBoard) {
+        setBoard([...newBoard]);
+      }
       
       const gameWinner = game.checkWinner();
       if (gameWinner) {
@@ -78,11 +105,23 @@ function App() {
   };
 
   const resetGame = () => {
-    const newGame = createGame();
-    setGame(newGame);
-    setBoard(newGame.getBoard());
-    setCurrentPlayer('X');
-    setWinner(null);
+    setIsLoading(true);
+    setError(null);
+    try {
+      const newGame = createGame();
+      if (!newGame) {
+        throw new Error('Failed to create game');
+      }
+      setGame(newGame);
+      setBoard(newGame.getBoard());
+      setCurrentPlayer('X');
+      setWinner(null);
+    } catch (err) {
+      setError(err.message || 'Failed to reset game');
+      console.error('Game reset error:', err);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const resetToNameInput = () => {
@@ -92,7 +131,30 @@ function App() {
     setCurrentPlayer('X');
     setWinner(null);
     setPlayerNames({ X: '', O: '' });
+    setError(null);
   };
+
+  if (isLoading) {
+    return (
+      <div className="App">
+        <div className="loading-screen">
+          <h2>Loading game...</h2>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="App">
+        <div className="error-screen">
+          <h2>Error</h2>
+          <p>{error}</p>
+          <button onClick={resetToNameInput}>Try Again</button>
+        </div>
+      </div>
+    );
+  }
 
   if (!gameStarted) {
     return <NameInput onStart={handleStartGame} />;
@@ -139,7 +201,7 @@ function App() {
       <Canvas camera={{ position: [4, 4, 4], fov: 50 }}>
         <ambientLight intensity={0.5} />
         <pointLight position={[10, 10, 10]} />
-        <GameBoard3D board={board} onCellClick={handleCellClick} />
+        {board && <GameBoard3D board={board} onCellClick={handleCellClick} />}
         <OrbitControls />
       </Canvas>
     </div>

@@ -6,6 +6,16 @@ function NameInput({ onStart }) {
   const [player2Name, setPlayer2Name] = useState('');
   const [error, setError] = useState('');
 
+  const sanitizeName = (name) => {
+    // Remove any HTML tags and special characters that could be used for XSS
+    return name.replace(/[<>'"&]/g, '').trim();
+  };
+
+  const normalizeName = (name) => {
+    // Normalize names to lowercase for consistent storage and comparison
+    return sanitizeName(name).toLowerCase();
+  };
+
   const handleStart = (e) => {
     e.preventDefault();
     
@@ -18,12 +28,20 @@ function NameInput({ onStart }) {
       setError('Please enter Player 2 name');
       return;
     }
-    if (player1Name.trim().toLowerCase() === player2Name.trim().toLowerCase()) {
+    if (normalizeName(player1Name) === normalizeName(player2Name)) {
       setError('Players must have different names');
       return;
     }
 
-    onStart(player1Name.trim(), player2Name.trim());
+    onStart(sanitizeName(player1Name), sanitizeName(player2Name));
+  };
+
+  const handlePlayer1Blur = (e) => {
+    setPlayer1Name(e.target.value.trim());
+  };
+
+  const handlePlayer2Blur = (e) => {
+    setPlayer2Name(e.target.value.trim());
   };
 
   return (
@@ -43,9 +61,12 @@ function NameInput({ onStart }) {
                 setPlayer1Name(e.target.value);
                 setError('');
               }}
+              onBlur={handlePlayer1Blur}
               placeholder="Enter name..."
               maxLength={20}
               autoFocus
+              aria-invalid={error && !player1Name.trim() ? 'true' : 'false'}
+              aria-describedby={error ? 'error-message' : undefined}
             />
           </div>
 
@@ -59,12 +80,24 @@ function NameInput({ onStart }) {
                 setPlayer2Name(e.target.value);
                 setError('');
               }}
+              onBlur={handlePlayer2Blur}
               placeholder="Enter name..."
               maxLength={20}
+              aria-invalid={error && !player2Name.trim() ? 'true' : 'false'}
+              aria-describedby={error ? 'error-message' : undefined}
             />
           </div>
 
-          {error && <div className="error-message">{error}</div>}
+          {error && (
+            <div 
+              id="error-message" 
+              className="error-message" 
+              role="alert" 
+              aria-live="polite"
+            >
+              {error}
+            </div>
+          )}
 
           <button type="submit" className="start-button">
             Start Game
