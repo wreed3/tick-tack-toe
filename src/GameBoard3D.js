@@ -1,57 +1,63 @@
+import React, { useRef } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { OrbitControls, PerspectiveCamera } from '@react-three/drei';
 import Cell3D from './Cell3D';
 
-function GameBoard3D({ board, onCellClick, winningCells }) {
-  const isWinningCell = (z, y, x) => {
-    return winningCells.some(
-      cell => cell[0] === z && cell[1] === y && cell[2] === x
-    );
-  };
+function GameBoard3D({ board, onCellClick, currentPlayer }) {
+  const gridSize = 3;
+  const cellSpacing = 2.5; // Increased spacing for larger board
 
   return (
-    <div style={{ width: '100%', height: '600px' }}>
-      <Canvas 
-        style={{ width: '100%', height: '100%' }}
-        gl={{ antialias: true, alpha: false }}
-        dpr={[1, 2]}
-      >
-        <color attach="background" args={['#0f172a']} />
-        <PerspectiveCamera makeDefault position={[5, 5, 5]} fov={50} />
-        <OrbitControls 
-          enablePan={true}
-          enableZoom={true}
-          enableRotate={true}
-          minDistance={3}
-          maxDistance={15}
-          target={[0, 0, 0]}
-        />
-        
-        {/* Lighting */}
-        <ambientLight intensity={0.6} />
-        <directionalLight position={[10, 10, 10]} intensity={1} />
-        <directionalLight position={[-10, -10, -10]} intensity={0.3} />
-        <pointLight position={[0, 5, 0]} intensity={0.5} />
+    <Canvas shadows>
+      <PerspectiveCamera makeDefault position={[0, 8, 12]} fov={50} />
+      <OrbitControls 
+        enablePan={false}
+        minDistance={8}
+        maxDistance={20}
+        maxPolarAngle={Math.PI / 2}
+      />
+      
+      {/* Lighting */}
+      <ambientLight intensity={0.6} />
+      <directionalLight
+        position={[10, 10, 5]}
+        intensity={1}
+        castShadow
+        shadow-mapSize-width={2048}
+        shadow-mapSize-height={2048}
+      />
+      <pointLight position={[-10, -10, -5]} intensity={0.5} />
 
-        {/* Render all 27 cells */}
-        {board.map((layer, z) =>
-          layer.map((row, y) =>
-            row.map((cell, x) => (
+      {/* Grid lines */}
+      <gridHelper args={[8, 8]} position={[0, -0.1, 0]} />
+
+      {/* Game board */}
+      <group>
+        {board.map((row, rowIndex) =>
+          row.map((cell, colIndex) => {
+            const x = (colIndex - 1) * cellSpacing;
+            const z = (rowIndex - 1) * cellSpacing;
+            const index = rowIndex * gridSize + colIndex;
+            
+            return (
               <Cell3D
-                key={`${z}-${y}-${x}`}
-                position={[(x - 1) * 1.2, (y - 1) * 1.2, (z - 1) * 1.2]}
+                key={index}
+                position={[x, 0, z]}
                 value={cell}
-                onClick={() => onCellClick(z, y, x)}
-                isWinningCell={isWinningCell(z, y, x)}
+                onClick={() => onCellClick(rowIndex, colIndex)}
+                isHovered={false}
               />
-            ))
-          )
+            );
+          })
         )}
+      </group>
 
-        {/* Grid helper for reference */}
-        <gridHelper args={[6, 6]} position={[0, -2, 0]} />
-      </Canvas>
-    </div>
+      {/* Base platform */}
+      <mesh receiveShadow position={[0, -0.5, 0]}>
+        <boxGeometry args={[9, 0.5, 9]} />
+        <meshStandardMaterial color="#2d3748" />
+      </mesh>
+    </Canvas>
   );
 }
 

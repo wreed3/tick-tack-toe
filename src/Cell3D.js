@@ -1,62 +1,50 @@
-import { useRef, useState } from 'react';
+import React, { useRef, useState } from 'react';
+import { useFrame } from '@react-three/fiber';
 import { Text } from '@react-three/drei';
 
-function Cell3D({ position, value, onClick, isWinningCell }) {
+function Cell3D({ position, value, onClick, isHovered }) {
   const meshRef = useRef();
   const [hovered, setHovered] = useState(false);
 
-  const handleClick = (e) => {
-    e.stopPropagation();
-    onClick();
-  };
+  useFrame((state) => {
+    if (meshRef.current && value) {
+      meshRef.current.rotation.y = Math.sin(state.clock.elapsedTime * 2) * 0.1;
+    }
+  });
+
+  const cellSize = 2; // Increased from default
 
   return (
     <group position={position}>
-      {/* Cell cube */}
+      {/* Cell base */}
       <mesh
         ref={meshRef}
-        onClick={handleClick}
-        onPointerOver={(e) => {
-          e.stopPropagation();
-          setHovered(true);
-        }}
-        onPointerOut={(e) => {
-          e.stopPropagation();
-          setHovered(false);
-        }}
+        onClick={onClick}
+        onPointerOver={() => setHovered(true)}
+        onPointerOut={() => setHovered(false)}
+        castShadow
+        receiveShadow
       >
-        <boxGeometry args={[0.9, 0.9, 0.9]} />
+        <boxGeometry args={[cellSize, 0.3, cellSize]} />
         <meshStandardMaterial
-          color={isWinningCell ? '#4ade80' : hovered ? '#60a5fa' : '#1e293b'}
-          transparent
-          opacity={value ? 0.3 : 0.1}
-          wireframe={!value}
+          color={hovered && !value ? '#4299e1' : '#4a5568'}
+          emissive={hovered && !value ? '#2c5282' : '#000000'}
+          emissiveIntensity={0.3}
         />
       </mesh>
 
-      {/* X or O text - render on all 6 faces for visibility */}
+      {/* X or O */}
       {value && (
-        <>
-          <Text
-            position={[0, 0, 0.46]}
-            fontSize={0.5}
-            color={value === 'X' ? '#ef4444' : '#3b82f6'}
-            anchorX="center"
-            anchorY="middle"
-          >
-            {value}
-          </Text>
-          <Text
-            position={[0, 0, -0.46]}
-            rotation={[0, Math.PI, 0]}
-            fontSize={0.5}
-            color={value === 'X' ? '#ef4444' : '#3b82f6'}
-            anchorX="center"
-            anchorY="middle"
-          >
-            {value}
-          </Text>
-        </>
+        <Text
+          position={[0, 0.5, 0]}
+          fontSize={1.5}
+          color={value === 'X' ? '#f56565' : '#48bb78'}
+          anchorX="center"
+          anchorY="middle"
+          font="/fonts/bold.woff"
+        >
+          {value}
+        </Text>
       )}
     </group>
   );
