@@ -27,11 +27,48 @@
   text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
 }
 
+.winner {
+  font-size: 1.5rem;
+  margin: 10px 0;
+  font-weight: bold;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+  color: #ffd700;
+  animation: pulse 1s ease-in-out infinite;
+}
+
+.draw {
+  font-size: 1.5rem;
+  margin: 10px 0;
+  font-weight: bold;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+  color: #ffa500;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+}
+
+.instructions {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  padding: 20px;
+  border-radius: 10px;
+  margin: 20px 0;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  max-width: 600px;
+}
+
 .canvas-container {
   width: 90vw;
   height: 70vh;
   max-width: 1200px;
   max-height: 800px;
+  min-height: 600px;
   margin: 20px auto;
   border-radius: 10px;
   box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
@@ -59,4 +96,26 @@
 
 .reset-button:active {
   transform: translateY(0);
+}
+
+@media (max-width: 768px) {
+  .App-header h1 {
+    font-size: 2rem;
+  }
+
+  .game-info,
+  .winner,
+  .draw {
+    font-size: 1.2rem;
+  }
+
+  .canvas-container {
+    height: 400px;
+    min-height: 400px;
+  }
+
+  .reset-button {
+    font-size: 1rem;
+    padding: 12px 30px;
+  }
 }

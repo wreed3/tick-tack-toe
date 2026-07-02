@@ -8,7 +8,7 @@ function GameBoard3D({ board, onCellClick, currentPlayer }) {
   const cellSpacing = 2.5; // Increased spacing for larger board
 
   return (
-    <Canvas shadows>
+    <Canvas shadows antialias alpha={false} dpr={[1, 2]}>
       <PerspectiveCamera makeDefault position={[0, 8, 12]} fov={50} />
       <OrbitControls 
         enablePan={false}
@@ -33,22 +33,25 @@ function GameBoard3D({ board, onCellClick, currentPlayer }) {
 
       {/* Game board */}
       <group>
-        {board.map((row, rowIndex) =>
-          row.map((cell, colIndex) => {
-            const x = (colIndex - 1) * cellSpacing;
-            const z = (rowIndex - 1) * cellSpacing;
-            const index = rowIndex * gridSize + colIndex;
-            
-            return (
-              <Cell3D
-                key={index}
-                position={[x, 0, z]}
-                value={cell}
-                onClick={() => onCellClick(rowIndex, colIndex)}
-                isHovered={false}
-              />
-            );
-          })
+        {board.map((layer, z) =>
+          layer.map((row, y) =>
+            row.map((cell, x) => {
+              const posX = (x - 1) * cellSpacing;
+              const posY = (z - 1) * cellSpacing;
+              const posZ = (y - 1) * cellSpacing;
+              const index = z * gridSize * gridSize + y * gridSize + x;
+              
+              return (
+                <Cell3D
+                  key={index}
+                  position={[posX, posY, posZ]}
+                  value={cell}
+                  onClick={() => onCellClick(z, y, x)}
+                  isHovered={false}
+                />
+              );
+            })
+          )
         )}
       </group>
 

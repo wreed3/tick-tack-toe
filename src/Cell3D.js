@@ -1,8 +1,8 @@
-import React, { useRef, useState } from 'react';
+import { useRef, useState } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { Text } from '@react-three/drei';
 
-function Cell3D({ position, value, onClick, isHovered }) {
+function Cell3D({ position, value, onClick, isHovered, isWinningCell }) {
   const meshRef = useRef();
   const [hovered, setHovered] = useState(false);
 
@@ -19,16 +19,25 @@ function Cell3D({ position, value, onClick, isHovered }) {
       {/* Cell base */}
       <mesh
         ref={meshRef}
-        onClick={onClick}
-        onPointerOver={() => setHovered(true)}
-        onPointerOut={() => setHovered(false)}
+        onClick={(e) => {
+          e.stopPropagation();
+          onClick(e);
+        }}
+        onPointerOver={(e) => {
+          e.stopPropagation();
+          setHovered(true);
+        }}
+        onPointerOut={(e) => {
+          e.stopPropagation();
+          setHovered(false);
+        }}
         castShadow
         receiveShadow
       >
         <boxGeometry args={[cellSize, 0.3, cellSize]} />
         <meshStandardMaterial
-          color={hovered && !value ? '#4299e1' : '#4a5568'}
-          emissive={hovered && !value ? '#2c5282' : '#000000'}
+          color={isWinningCell ? '#4ade80' : (hovered && !value ? '#4299e1' : '#4a5568')}
+          emissive={isWinningCell ? '#22c55e' : (hovered && !value ? '#2c5282' : '#000000')}
           emissiveIntensity={0.3}
         />
       </mesh>
@@ -41,7 +50,6 @@ function Cell3D({ position, value, onClick, isHovered }) {
           color={value === 'X' ? '#f56565' : '#48bb78'}
           anchorX="center"
           anchorY="middle"
-          font="/fonts/bold.woff"
         >
           {value}
         </Text>
