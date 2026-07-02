@@ -4,7 +4,7 @@ import './App.css';
 function App() {
   const [board, setBoard] = useState(Array(9).fill(null));
   const [isXNext, setIsXNext] = useState(true);
-  const [winner, setWinner] = useState(null);
+  const [gameStatus, setGameStatus] = useState(null);
 
   const calculateWinner = (squares) => {
     const lines = [
@@ -17,25 +17,34 @@ function App() {
       [0, 4, 8],
       [2, 4, 6],
     ];
+    
+    // Check for a winner
     for (let i = 0; i < lines.length; i++) {
       const [a, b, c] = lines[i];
       if (squares[a] && squares[a] === squares[b] && squares[a] === squares[c]) {
-        return squares[a];
+        return squares[a]; // Return 'X' or 'O'
       }
     }
+    
+    // Check for a draw (all squares filled, no winner)
+    if (squares.every(square => square !== null)) {
+      return 'draw';
+    }
+    
+    // Game still in progress
     return null;
   };
 
   const handleClick = (index) => {
-    if (board[index] || winner) return;
+    if (board[index] || gameStatus) return;
     
     const newBoard = [...board];
     newBoard[index] = isXNext ? 'X' : 'O';
     setBoard(newBoard);
     
-    const newWinner = calculateWinner(newBoard);
-    if (newWinner) {
-      setWinner(newWinner);
+    const result = calculateWinner(newBoard);
+    if (result) {
+      setGameStatus(result);
     }
     
     setIsXNext(!isXNext);
@@ -44,7 +53,7 @@ function App() {
   const resetGame = () => {
     setBoard(Array(9).fill(null));
     setIsXNext(true);
-    setWinner(null);
+    setGameStatus(null);
   };
 
   const renderSquare = (index) => {
@@ -58,16 +67,14 @@ function App() {
     );
   };
 
-  const isDraw = !winner && board.every(square => square !== null);
-
   return (
     <div className="App">
       <h1>Tic-Tac-Toe</h1>
       <div className="status">
-        {winner ? (
-          <span className="winner">Winner: {winner}!</span>
-        ) : isDraw ? (
+        {gameStatus === 'draw' ? (
           <span>It's a draw!</span>
+        ) : gameStatus ? (
+          <span className="winner">Winner: {gameStatus}!</span>
         ) : (
           <span>Next player: {isXNext ? 'X' : 'O'}</span>
         )}
