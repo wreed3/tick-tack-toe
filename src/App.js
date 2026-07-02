@@ -22,16 +22,15 @@ function App() {
     for (let i = 0; i < lines.length; i++) {
       const [a, b, c] = lines[i];
       if (squares[a] && squares[a] === squares[b] && squares[a] === squares[c]) {
-        return squares[a]; // Return 'X' or 'O'
+        return squares[a];
       }
     }
     
-    // Check for a draw (all squares filled, no winner)
+    // Check for a draw
     if (squares.every(square => square !== null)) {
       return 'draw';
     }
     
-    // Game still in progress
     return null;
   };
 
