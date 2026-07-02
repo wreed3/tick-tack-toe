@@ -1,34 +1,6 @@
 import React, { useState } from 'react';
 import './App.css';
 
-class ErrorBoundary extends React.Component {
-  constructor(props) {
-    super(props);
-    this.state = { hasError: false };
-  }
-
-  static getDerivedStateFromError(error) {
-    return { hasError: true };
-  }
-
-  componentDidCatch(error, errorInfo) {
-    console.error('Error caught by boundary:', error, errorInfo);
-  }
-
-  render() {
-    if (this.state.hasError) {
-      return (
-        <div className="error-fallback">
-          <h2>Something went wrong.</h2>
-          <button onClick={() => window.location.reload()}>Reload Page</button>
-        </div>
-      );
-    }
-
-    return this.props.children;
-  }
-}
-
 function App() {
   const [board, setBoard] = useState(Array(9).fill(null));
   const [isXNext, setIsXNext] = useState(true);
@@ -51,12 +23,6 @@ function App() {
         return squares[a];
       }
     }
-    
-    // Check for draw
-    if (squares.every(square => square !== null)) {
-      return 'DRAW';
-    }
-    
     return null;
   };
 
@@ -92,43 +58,41 @@ function App() {
     );
   };
 
-  const isDraw = winner === 'DRAW';
+  const isDraw = !winner && board.every(square => square !== null);
 
   return (
-    <ErrorBoundary>
-      <div className="App">
-        <h1>Tic-Tac-Toe</h1>
-        <div className="status">
-          {winner && winner !== 'DRAW' ? (
-            <span className="winner">Winner: {winner}! 🎉</span>
-          ) : isDraw ? (
-            <span>It's a draw!</span>
-          ) : (
-            <span>Next player: {isXNext ? 'X' : 'O'}</span>
-          )}
-        </div>
-        <div className="board">
-          <div className="board-row">
-            {renderSquare(0)}
-            {renderSquare(1)}
-            {renderSquare(2)}
-          </div>
-          <div className="board-row">
-            {renderSquare(3)}
-            {renderSquare(4)}
-            {renderSquare(5)}
-          </div>
-          <div className="board-row">
-            {renderSquare(6)}
-            {renderSquare(7)}
-            {renderSquare(8)}
-          </div>
-        </div>
-        <button className="reset-button" onClick={resetGame}>
-          Reset Game
-        </button>
+    <div className="App">
+      <h1>Tic-Tac-Toe</h1>
+      <div className="status">
+        {winner ? (
+          <span className="winner">Winner: {winner}!</span>
+        ) : isDraw ? (
+          <span>It's a draw!</span>
+        ) : (
+          <span>Next player: {isXNext ? 'X' : 'O'}</span>
+        )}
       </div>
-    </ErrorBoundary>
+      <div className="board">
+        <div className="board-row">
+          {renderSquare(0)}
+          {renderSquare(1)}
+          {renderSquare(2)}
+        </div>
+        <div className="board-row">
+          {renderSquare(3)}
+          {renderSquare(4)}
+          {renderSquare(5)}
+        </div>
+        <div className="board-row">
+          {renderSquare(6)}
+          {renderSquare(7)}
+          {renderSquare(8)}
+        </div>
+      </div>
+      <button className="reset-button" onClick={resetGame}>
+        Reset Game
+      </button>
+    </div>
   );
 }
 
