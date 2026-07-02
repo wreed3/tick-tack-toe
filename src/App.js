@@ -1,70 +1,60 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { OrbitControls } from '@react-three/drei';
 import { ErrorBoundary } from 'react-error-boundary';
-import GameBoard3D from './GameBoard3D';
-import NameInput from './NameInput';
-import { createGame } from './game3d';
 import confetti from 'canvas-confetti';
 import './App.css';
+import GameBoard3D from './components/GameBoard3D';
+import NameInput from './components/NameInput';
 
-const CONFETTI_DURATION = 3000;
-// Initial velocity of confetti particles in pixels per second
-const CONFETTI_START_VELOCITY = 30;
-// Spread angle of confetti particles in degrees (360 = full circle)
-const CONFETTI_SPREAD = 360;
-// Number of animation frames for confetti particles (higher = longer animation)
-const CONFETTI_TICKS = 60;
-const CONFETTI_Z_INDEX = 1000;
-
-function CanvasErrorFallback({ error, resetErrorBoundary }) {
+function ErrorFallback({ error, resetErrorBoundary }) {
   return (
-    <div className="canvas-error-fallback" style={{ padding: '20px', textAlign: 'center' }}>
-      <h2>3D Rendering Error</h2>
-      <p>Unable to initialize 3D graphics. This may be due to:</p>
-      <ul style={{ textAlign: 'left', display: 'inline-block' }}>
-        <li>Unsupported browser or WebGL not available</li>
-        <li>GPU or graphics driver issues</li>
-        <li>Hardware acceleration disabled</li>
-      </ul>
-      <p style={{ fontSize: '0.9em', color: '#666' }}>{error.message}</p>
-      <button onClick={resetErrorBoundary}>Try Again</button>
+    <div role="alert" style={{ padding: '20px', textAlign: 'center' }}>
+      <h2>Something went wrong with the 3D rendering:</h2>
+      <pre style={{ color: 'red' }}>{error.message}</pre>
+      <button onClick={resetErrorBoundary}>Try again</button>
     </div>
   );
 }
 
 function App() {
-  const [game, setGame] = useState(null);
-  const [board, setBoard] = useState(null);
-  const [currentPlayer, setCurrentPlayer] = useState('X');
-  const [winner, setWinner] = useState(null);
-  const [gameStarted, setGameStarted] = useState(false);
-  const [playerNames, setPlayerNames] = useState({ X: '', O: '' });
+  const [board, setBoard] = useState(Array(9).fill(null));
+  const [isXNext, setIsXNext] = useState(true);
+  const [gameStatus, setGameStatus] = useState(null);
+  const [playerNames, setPlayerNames] = useState({ X: 'Player X', O: 'Player O' });
 
-  const handleStartGame = async (player1Name, player2Name) => {
-    try {
-      setPlayerNames({ X: player1Name, O: player2Name });
-      const newGame = createGame();
-      if (!newGame) {
-        throw new Error('Failed to create game');
+  const calculateWinner = (squares) => {
+    const lines = [
+      [0, 1, 2],
+      [3, 4, 5],
+      [6, 7, 8],
+      [0, 3, 6],
+      [1, 4, 7],
+      [2, 5, 8],
+      [0, 4, 8],
+      [2, 4, 6],
+    ];
+    
+    // Check for a winner
+    for (let i = 0; i < lines.length; i++) {
+      const [a, b, c] = lines[i];
+      if (squares[a] && squares[a] === squares[b] && squares[a] === squares[c]) {
+        return squares[a];
       }
-      setGame(newGame);
-      setBoard(newGame.getBoard());
-      setGameStarted(true);
-    } catch (err) {
-      console.error('Game initialization error:', err);
-      alert('Failed to initialize game. Please try again.');
     }
+    
+    // Check for a draw
+    if (squares.every(square => square !== null)) {
+      return 'draw';
+    }
+    
+    return null;
   };
 
   const triggerConfetti = () => {
-    const animationEnd = Date.now() + CONFETTI_DURATION;
-    const defaults = { 
-      startVelocity: CONFETTI_START_VELOCITY, 
-      spread: CONFETTI_SPREAD, 
-      ticks: CONFETTI_TICKS, 
-      zIndex: CONFETTI_Z_INDEX 
-    };
+    const duration = 3000;
+    const animationEnd = Date.now() + duration;
+    const defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 0 };
 
     function randomInRange(min, max) {
       return Math.random() * (max - min) + min;
@@ -77,125 +67,79 @@ function App() {
         return clearInterval(interval);
       }
 
-      const particleCount = 50 * (timeLeft / CONFETTI_DURATION);
-      
-      // Launch confetti from two different positions
-      confetti({
-        ...defaults,
+      const particleCount = 50 * (timeLeft / duration);
+      confetti(Object.assign({}, defaults, {
         particleCount,
         origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 }
-      });
-      confetti({
-        ...defaults,
+      }));
+      confetti(Object.assign({}, defaults, {
         particleCount,
         origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 }
-      });
+      }));
     }, 250);
   };
 
-  useEffect(() => {
-    if (winner && winner !== 'draw') {
-      triggerConfetti();
-    }
-  }, [winner]);
-
-  const handleCellClick = (x, y, z) => {
-    if (!game || winner) return;
-
-    const success = game.makeMove(x, y, z, currentPlayer);
-    if (success) {
-      const newBoard = game.getBoard();
-      if (newBoard) {
-        setBoard([...newBoard]);
-      }
-      
-      const gameWinner = game.checkWinner();
-      if (gameWinner) {
-        setWinner(gameWinner);
-      } else {
-        setCurrentPlayer(currentPlayer === 'X' ? 'O' : 'X');
+  const handleClick = (index) => {
+    if (board[index] || gameStatus) return;
+    
+    const newBoard = [...board];
+    newBoard[index] = isXNext ? 'X' : 'O';
+    setBoard(newBoard);
+    
+    const result = calculateWinner(newBoard);
+    if (result) {
+      setGameStatus(result);
+      if (result !== 'draw') {
+        triggerConfetti();
       }
     }
+    
+    setIsXNext(!isXNext);
   };
 
   const resetGame = () => {
-    try {
-      const newGame = createGame();
-      if (!newGame) {
-        throw new Error('Failed to create game');
-      }
-      setGame(newGame);
-      setBoard(newGame.getBoard());
-      setCurrentPlayer('X');
-      setWinner(null);
-    } catch (err) {
-      console.error('Game reset error:', err);
-      alert('Failed to reset game. Please try again.');
-    }
+    setBoard(Array(9).fill(null));
+    setIsXNext(true);
+    setGameStatus(null);
   };
 
-  const resetToNameInput = () => {
-    setGameStarted(false);
-    setGame(null);
-    setBoard(null);
-    setCurrentPlayer('X');
-    setWinner(null);
-    setPlayerNames({ X: '', O: '' });
-  };
-
-  if (!gameStarted) {
-    return <NameInput onStart={handleStartGame} />;
-  }
-
-  const getStatusMessage = () => {
-    if (winner === 'draw') {
-      return "It's a Draw! 🤝";
-    }
-    if (winner) {
-      const winnerName = playerNames[winner];
-      return `🎉 ${winnerName} Wins! 🎉`;
-    }
-    const currentPlayerName = playerNames[currentPlayer];
-    return `${currentPlayerName}'s Turn (${currentPlayer})`;
+  const handleNameChange = (player, name) => {
+    setPlayerNames(prev => ({ ...prev, [player]: name }));
   };
 
   return (
     <div className="App">
-      <div className="game-header">
-        <h1>3D Tic-Tac-Toe</h1>
-        <div className="player-info">
-          <span className={currentPlayer === 'X' ? 'active' : ''}>
-            {playerNames.X} (X)
-          </span>
-          <span className="vs">vs</span>
-          <span className={currentPlayer === 'O' ? 'active' : ''}>
-            {playerNames.O} (O)
-          </span>
-        </div>
-        <div className={`status ${winner ? 'winner' : ''}`} aria-live="polite" aria-atomic="true">
-          {getStatusMessage()}
-        </div>
-        <div className="button-group">
-          <button onClick={resetGame} className="reset-button">
-            New Game
-          </button>
-          <button onClick={resetToNameInput} className="change-names-button">
-            Change Names
-          </button>
-        </div>
+      <h1>3D Tic-Tac-Toe</h1>
+      <NameInput 
+        playerNames={playerNames}
+        onNameChange={handleNameChange}
+      />
+      <div className="status">
+        {gameStatus === 'draw' ? (
+          <span>It's a draw!</span>
+        ) : gameStatus ? (
+          <span className="winner">Winner: {playerNames[gameStatus]}!</span>
+        ) : (
+          <span>Next player: {playerNames[isXNext ? 'X' : 'O']}</span>
+        )}
       </div>
-      
       <ErrorBoundary
-        FallbackComponent={CanvasErrorFallback}
+        FallbackComponent={ErrorFallback}
         onReset={resetGame}
       >
-        <Canvas camera={{ position: [4, 4, 4], fov: 50 }}>
+        <Canvas camera={{ position: [0, 0, 8], fov: 50 }}>
           <ambientLight intensity={0.5} />
           <pointLight position={[10, 10, 10]} />
-          {board && <GameBoard3D board={board} onCellClick={handleCellClick} />}
+          <GameBoard3D 
+            board={board}
+            onSquareClick={handleClick}
+          />
           <OrbitControls />
         </Canvas>
       </ErrorBoundary>
+      <button className="reset-button" onClick={resetGame}>
+        Reset Game
+      </button>
     </div>
   );
 }

@@ -1,151 +1,95 @@
 .App {
-  width: 100vw;
-  height: 100vh;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  text-align: center;
+  padding: 20px;
+  min-height: 100vh;
   display: flex;
   flex-direction: column;
-}
-
-.game-header {
-  padding: 20px;
-  text-align: center;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: white;
-  background: rgba(0, 0, 0, 0.2);
-  backdrop-filter: blur(10px);
 }
 
-.game-header h1 {
-  margin: 0 0 15px 0;
-  font-size: 2.5em;
+h1 {
+  font-size: 3rem;
+  margin-bottom: 20px;
   text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
 }
 
-.player-info {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 15px;
-  margin-bottom: 15px;
-  font-size: 1.2em;
-}
-
-.player-info span {
-  padding: 8px 20px;
-  border-radius: 20px;
-  background: rgba(255, 255, 255, 0.1);
-  transition: all 0.3s ease;
-}
-
-.player-info span.active {
-  background: rgba(255, 255, 255, 0.3);
-  font-weight: bold;
-  transform: scale(1.1);
-  box-shadow: 0 0 20px rgba(255, 255, 255, 0.3);
-}
-
-.player-info .vs {
-  background: transparent;
-  font-weight: bold;
-  padding: 0;
-}
-
 .status {
-  font-size: 1.5em;
+  font-size: 1.5rem;
+  margin-bottom: 20px;
   font-weight: bold;
-  margin: 15px 0;
-  padding: 10px 20px;
-  border-radius: 10px;
-  background: rgba(255, 255, 255, 0.1);
-  display: inline-block;
-  transition: all 0.3s ease;
 }
 
-.status.winner {
-  background: rgba(255, 215, 0, 0.3);
-  animation: pulse 1s ease-in-out infinite;
-  font-size: 1.8em;
+.winner {
+  color: #ffd700;
+  animation: pulse 0.5s ease-in-out infinite alternate;
 }
 
 @keyframes pulse {
-  0%, 100% {
+  from {
     transform: scale(1);
   }
-  50% {
-    transform: scale(1.05);
+  to {
+    transform: scale(1.1);
   }
 }
 
-.button-group {
-  display: flex;
-  gap: 15px;
-  justify-content: center;
-  margin-top: 15px;
+.board {
+  display: inline-block;
+  background: rgba(255, 255, 255, 0.1);
+  padding: 20px;
+  border-radius: 15px;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
 }
 
-.reset-button,
-.change-names-button {
-  padding: 12px 30px;
-  font-size: 1em;
-  font-weight: 600;
+.board-row {
+  display: flex;
+}
+
+.square {
+  width: 100px;
+  height: 100px;
+  background: rgba(255, 255, 255, 0.9);
+  border: 3px solid rgba(255, 255, 255, 0.3);
+  font-size: 2.5rem;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  color: #667eea;
+}
+
+.square:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 1);
+  transform: scale(1.05);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.square:disabled {
+  cursor: not-allowed;
+}
+
+.reset-button {
+  margin-top: 30px;
+  padding: 15px 40px;
+  font-size: 1.2rem;
+  font-weight: bold;
+  color: #667eea;
+  background: white;
   border: none;
-  border-radius: 25px;
+  border-radius: 50px;
   cursor: pointer;
   transition: all 0.3s ease;
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
 }
 
-.reset-button {
-  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-  color: white;
-}
-
-.change-names-button {
-  background: rgba(255, 255, 255, 0.9);
-  color: #667eea;
-}
-
-.reset-button:hover,
-.change-names-button:hover {
+.reset-button:hover {
   transform: translateY(-2px);
   box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
 }
 
-.reset-button:active,
-.change-names-button:active {
+.reset-button:active {
   transform: translateY(0);
-}
-
-canvas {
-  flex: 1;
-  outline: none;
-}
-
-@media (max-width: 768px) {
-  .game-header h1 {
-    font-size: 1.8em;
-  }
-  
-  .player-info {
-    font-size: 1em;
-    flex-wrap: wrap;
-  }
-  
-  .status {
-    font-size: 1.2em;
-  }
-  
-  .status.winner {
-    font-size: 1.4em;
-  }
-  
-  .button-group {
-    flex-direction: column;
-    gap: 10px;
-  }
-  
-  .reset-button,
-  .change-names-button {
-    width: 100%;
-    max-width: 250px;
-  }
 }
