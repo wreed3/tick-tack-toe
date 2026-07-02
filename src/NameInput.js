@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import DOMPurify from 'dompurify';
 import './NameInput.css';
 
 function NameInput({ onStart }) {
@@ -7,33 +8,53 @@ function NameInput({ onStart }) {
   const [error, setError] = useState('');
 
   const sanitizeName = (name) => {
-    // Remove any HTML tags and special characters that could be used for XSS
-    return name.replace(/[<>'"&]/g, '').trim();
+    // Use DOMPurify for comprehensive XSS protection
+    const cleaned = DOMPurify.sanitize(name, { 
+      ALLOWED_TAGS: [], 
+      ALLOWED_ATTR: [],
+      KEEP_CONTENT: true 
+    });
+    return cleaned.trim();
   };
 
   const normalizeName = (name) => {
-    // Normalize names to lowercase for consistent storage and comparison
+    // Normalize names for case-insensitive comparison
     return sanitizeName(name).toLowerCase();
   };
 
   const handleStart = (e) => {
     e.preventDefault();
     
+    const sanitized1 = sanitizeName(player1Name);
+    const sanitized2 = sanitizeName(player2Name);
+    
     // Validate names
-    if (!player1Name.trim()) {
+    if (!sanitized1) {
       setError('Please enter Player 1 name');
       return;
     }
-    if (!player2Name.trim()) {
+    if (!sanitized2) {
       setError('Please enter Player 2 name');
       return;
     }
+    
+    // Validate length after sanitization
+    if (sanitized1.length > 20) {
+      setError('Player 1 name must be 20 characters or less');
+      return;
+    }
+    if (sanitized2.length > 20) {
+      setError('Player 2 name must be 20 characters or less');
+      return;
+    }
+    
+    // Case-insensitive comparison for uniqueness
     if (normalizeName(player1Name) === normalizeName(player2Name)) {
-      setError('Players must have different names');
+      setError('Players must have different names (case-insensitive)');
       return;
     }
 
-    onStart(sanitizeName(player1Name), sanitizeName(player2Name));
+    onStart(sanitized1, sanitized2);
   };
 
   const handlePlayer1Blur = (e) => {

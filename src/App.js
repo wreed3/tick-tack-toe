@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { OrbitControls } from '@react-three/drei';
 import GameBoard3D from './GameBoard3D';
@@ -7,10 +7,34 @@ import { createGame } from './game3d';
 import confetti from 'canvas-confetti';
 import './App.css';
 
+/**
+ * Duration of the confetti animation in milliseconds.
+ * Set to 3 seconds to provide a celebratory effect without being too long.
+ */
 const CONFETTI_DURATION = 3000;
+
+/**
+ * Initial velocity of confetti particles.
+ * Value of 30 provides a good balance between dramatic effect and natural fall.
+ */
 const CONFETTI_START_VELOCITY = 30;
+
+/**
+ * Spread angle of confetti particles in degrees.
+ * 360 degrees creates a full circular spread for maximum visual impact.
+ */
 const CONFETTI_SPREAD = 360;
+
+/**
+ * Number of animation ticks for confetti particles.
+ * 60 ticks provides smooth animation at typical frame rates.
+ */
 const CONFETTI_TICKS = 60;
+
+/**
+ * Z-index for confetti canvas overlay.
+ * Set to 1000 to ensure confetti appears above game elements but below modals (typically 1001+).
+ */
 const CONFETTI_Z_INDEX = 1000;
 
 function App() {
@@ -22,6 +46,7 @@ function App() {
   const [playerNames, setPlayerNames] = useState({ X: '', O: '' });
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
+  const confettiIntervalRef = useRef(null);
 
   const handleStartGame = async (player1Name, player2Name) => {
     setIsLoading(true);
@@ -56,11 +81,13 @@ function App() {
       return Math.random() * (max - min) + min;
     }
 
-    const interval = setInterval(function() {
+    confettiIntervalRef.current = setInterval(function() {
       const timeLeft = animationEnd - Date.now();
 
       if (timeLeft <= 0) {
-        return clearInterval(interval);
+        clearInterval(confettiIntervalRef.current);
+        confettiIntervalRef.current = null;
+        return;
       }
 
       const particleCount = 50 * (timeLeft / CONFETTI_DURATION);
@@ -83,6 +110,14 @@ function App() {
     if (winner && winner !== 'draw') {
       triggerConfetti();
     }
+
+    // Cleanup function to cancel ongoing confetti animation
+    return () => {
+      if (confettiIntervalRef.current) {
+        clearInterval(confettiIntervalRef.current);
+        confettiIntervalRef.current = null;
+      }
+    };
   }, [winner]);
 
   const handleCellClick = (x, y, z) => {
