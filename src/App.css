@@ -1,47 +1,69 @@
 .App {
-  text-align: center;
+  width: 100vw;
+  height: 100vh;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  min-height: 100vh;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  color: white;
+}
+
+.game-header {
   padding: 20px;
+  text-align: center;
+  color: white;
+  background: rgba(0, 0, 0, 0.2);
+  backdrop-filter: blur(10px);
 }
 
-.App-header {
-  margin-bottom: 20px;
-}
-
-.App-header h1 {
-  font-size: 3rem;
-  margin: 0 0 10px 0;
+.game-header h1 {
+  margin: 0 0 15px 0;
+  font-size: 2.5em;
   text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
 }
 
-.game-info {
-  font-size: 1.5rem;
-  margin: 10px 0;
-  font-weight: bold;
-  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+.player-info {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 15px;
+  margin-bottom: 15px;
+  font-size: 1.2em;
 }
 
-.winner {
-  font-size: 1.5rem;
-  margin: 10px 0;
+.player-info span {
+  padding: 8px 20px;
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.1);
+  transition: all 0.3s ease;
+}
+
+.player-info span.active {
+  background: rgba(255, 255, 255, 0.3);
   font-weight: bold;
-  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
-  color: #ffd700;
+  transform: scale(1.1);
+  box-shadow: 0 0 20px rgba(255, 255, 255, 0.3);
+}
+
+.player-info .vs {
+  background: transparent;
+  font-weight: bold;
+  padding: 0;
+}
+
+.status {
+  font-size: 1.5em;
+  font-weight: bold;
+  margin: 15px 0;
+  padding: 10px 20px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.1);
+  display: inline-block;
+  transition: all 0.3s ease;
+}
+
+.status.winner {
+  background: rgba(255, 215, 0, 0.3);
   animation: pulse 1s ease-in-out infinite;
-}
-
-.draw {
-  font-size: 1.5rem;
-  margin: 10px 0;
-  font-weight: bold;
-  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
-  color: #ffa500;
+  font-size: 1.8em;
 }
 
 @keyframes pulse {
@@ -53,69 +75,77 @@
   }
 }
 
-.instructions {
-  background: rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(10px);
-  padding: 20px;
-  border-radius: 10px;
-  margin: 20px 0;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  max-width: 600px;
+.button-group {
+  display: flex;
+  gap: 15px;
+  justify-content: center;
+  margin-top: 15px;
 }
 
-.canvas-container {
-  width: 90vw;
-  height: 70vh;
-  max-width: 1200px;
-  max-height: 800px;
-  min-height: 600px;
-  margin: 20px auto;
-  border-radius: 10px;
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
-  background: rgba(0, 0, 0, 0.1);
+.reset-button,
+.change-names-button {
+  padding: 12px 30px;
+  font-size: 1em;
+  font-weight: 600;
+  border: none;
+  border-radius: 25px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
 }
 
 .reset-button {
   background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
   color: white;
-  border: none;
-  padding: 15px 40px;
-  font-size: 1.2rem;
-  border-radius: 50px;
-  cursor: pointer;
-  margin-top: 20px;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-  transition: transform 0.2s, box-shadow 0.2s;
-  font-weight: bold;
 }
 
-.reset-button:hover {
+.change-names-button {
+  background: rgba(255, 255, 255, 0.9);
+  color: #667eea;
+}
+
+.reset-button:hover,
+.change-names-button:hover {
   transform: translateY(-2px);
   box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
 }
 
-.reset-button:active {
+.reset-button:active,
+.change-names-button:active {
   transform: translateY(0);
 }
 
+canvas {
+  flex: 1;
+  outline: none;
+}
+
 @media (max-width: 768px) {
-  .App-header h1 {
-    font-size: 2rem;
+  .game-header h1 {
+    font-size: 1.8em;
   }
-
-  .game-info,
-  .winner,
-  .draw {
-    font-size: 1.2rem;
+  
+  .player-info {
+    font-size: 1em;
+    flex-wrap: wrap;
   }
-
-  .canvas-container {
-    height: 400px;
-    min-height: 400px;
+  
+  .status {
+    font-size: 1.2em;
   }
-
-  .reset-button {
-    font-size: 1rem;
-    padding: 12px 30px;
+  
+  .status.winner {
+    font-size: 1.4em;
+  }
+  
+  .button-group {
+    flex-direction: column;
+    gap: 10px;
+  }
+  
+  .reset-button,
+  .change-names-button {
+    width: 100%;
+    max-width: 250px;
   }
 }
