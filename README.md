@@ -1,5 +1,7 @@
 # Tic-Tac-Toe Game
 
+> **Note:** This is a test session for demonstration purposes.
+
 A classic Tic-Tac-Toe game built with React, featuring a clean UI, game state management, and win detection.
 
 ## Features
