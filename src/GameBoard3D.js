@@ -42,7 +42,9 @@ function GameBoard3D({ board, onCellClick, winningCells }) {
       {/* Game board */}
       {/* Coordinate mapping: board[z][y][x] -> position[posX, posY, posZ]
           where posX = (x-1)*spacing, posY = (z-1)*spacing, posZ = (y-1)*spacing
-          This transforms board coordinates to 3D space with z-axis as vertical */}
+          This transforms board coordinates to 3D space with z-axis as vertical.
+          The cellSpacing of 2.5 provides adequate visual separation between cells
+          for the 3x3x3 grid, improving clarity and user interaction. */}
       <group>
         {board.map((layer, z) =>
           layer.map((row, y) =>
